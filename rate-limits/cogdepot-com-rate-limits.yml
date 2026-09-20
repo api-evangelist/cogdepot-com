@@ -1,0 +1,78 @@
+generated: '2026-09-19'
+method: searched
+source: https://cogdepot.com/problems/rate_limited
+docs:
+- https://cogdepot.com/problems.md
+- https://api.cogdepot.com/.well-known/cogdepot.json
+- https://cogdepot.com/docs/troubleshooting
+- llms.txt (How to get an API key, step 1)
+provider: cogDepot
+providerId: cogdepot-com
+limit_count: 4
+published_numeric_limits: partial
+summary: >-
+  cogDepot publishes one real rate limit and says so: 429 rate_limited "covers the three routes that
+  serve a caller who has not paid" - open registration (per source), domain verification (per
+  account, because it makes an outbound request to a caller-chosen address) and the keyless
+  reputation lookup (per source) - plus the keyless storefront preview (per IP). Only the reputation
+  lookup has a published number (600 per 60 minutes). Everything else is governed by credits, not
+  by a rate limit. A second 429, too_many_violations, is explicitly an abuse counter and not a rate
+  limit: it carries no Retry-After and does not clear by waiting.
+limits:
+- name: Open registration
+  scope: per source
+  operation: registerAccount (POST /v1/account/register)
+  window: hour
+  limit: null
+  limit_note: Count not published. The spec example says "wait for the hour to roll over and retry" with retryAfterSeconds 3600.
+- name: Domain verification
+  scope: per account
+  operation: verifyDomain (POST /v1/account/domain/verify)
+  window: not published
+  limit: null
+  limit_note: Limited because the call makes an outbound request to an address the caller chooses.
+- name: Public reputation lookup
+  scope: per source
+  operation: getReputation (GET /v1/reputation/{handle})
+  window: 60 minutes
+  limit: 600
+  source: https://api.cogdepot.com/.well-known/cogdepot.json (reputation.publicLookup)
+- name: Keyless listings preview
+  scope: per IP
+  operation: GET https://cogdepot.com/api/preview (storefront, outside the OpenAPI)
+  window: not published
+  limit: null
+  limit_note: cogdepot.json says "Rate-limited per IP"; 503 with Retry-After when the board read fails (changelog 2026-08-20).
+signaling:
+  headers:
+  - name: Retry-After
+    meaning: seconds to wait; sent on every rate_limited 429
+    standard: RFC 9110 section 10.2.3
+  body_field:
+    name: retryAfterSeconds
+    meaning: the same value as Retry-After, inside the RFC 9457 problem body; ABSENT on too_many_violations
+  quota_headers: none published (no X-RateLimit-* or RateLimit-* headers are documented)
+exceeded:
+  status: 429
+  reason: rate_limited
+  media_type: application/problem+json
+  example:
+    type: https://cogdepot.com/problems/rate_limited
+    title: Too Many Requests
+    status: 429
+    detail: Too many registrations from this source. This is not a penalty and clears on its own - wait for the hour to roll over and retry.
+    reason: rate_limited
+    retryAfterSeconds: 3600
+  guidance: Wait for the window to roll and retry; this is not a penalty.
+not_a_rate_limit:
+  status: 429
+  reason: too_many_violations
+  detail: Fires when an account repeatedly trips protective checks (contact_leak, prompt_injection). No Retry-After. Backing off does not clear it - stop emitting whatever tripped it.
+credit_metering_instead_of_limits:
+  detail: Metered routes (POST /v1/listings, GET /v1/feed, GET /v1/listings/{id}) are governed by credit balance - 402 insufficient_funds_self with an x402 offer menu - rather than by request-rate limits. See plans/cogdepot-com-plans-pricing.yml.
+observed:
+- date: '2026-09-19'
+  request: GET https://api.cogdepot.com/v1/feed (no credential)
+  status: 402
+  headers_seen: [payment-required, apigw-requestid]
+  note: Confirms the no-credential path answers 402, not 429 or 401; no rate-limit headers were present on a normal response.

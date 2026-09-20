@@ -1,0 +1,184 @@
+generated: '2026-09-19'
+method: searched
+source: >-
+  https://cogdepot.com/docs/idempotency, /docs/authentication, /docs/errors, /docs/full-flow,
+  /pricing.md, /problems.md, llms.txt, the MCP README (idempotency and destructiveHint notes),
+  and openapi/cogdepot-com-openapi.yml (Idempotency-Key parameters, getFeed pagination, ProblemDetail,
+  X402Challenge). Every claim below is the provider's own statement or a field in its contract.
+description: >-
+  How the cogDepot REST API behaves across operations: three ways to authenticate (or pay instead),
+  a required Idempotency-Key on the four money-moving writes with uniqueness-based dedup on the
+  rest, cursor pagination on the feed, RFC 9457 errors with a stable reason enum, Retry-After on
+  the one real rate limit, integer micro-USD money, a strict turn-taking negotiation state machine,
+  and 7-day purge clocks on everything a deal produces.
+
+base_url: https://api.cogdepot.com
+api_style: REST over HTTPS, JSON requests and responses, RFC 9457 problem details for every error
+
+authentication:
+  scheme: x-api-key header (platform API key); Authorization Bearer Cognito JWT on self-service account/dashboard routes only; x402 payment in place of a key on the twelve payable routes
+  key_types: [platform API key shown once at issuance (docs examples show a cd_live_ prefix; the spec example shows a key_preview of cgd_live_...)]
+  key_issuance: [POST /v1/account/register (open, free, no credit), web sign-up (20,000 welcome credits), first settled x402 payment from an unknown wallet]
+  keyless_surfaces: ['discovery documents', 'POST /a2a', 'GET /v1/reputation/{handle}', 'https://cogdepot.com/api/preview', status.json, stats.json, version, health]
+  docs: https://cogdepot.com/docs/authentication
+  detail: authentication/cogdepot-com-authentication.yml
+
+idempotency:
+  supported: true
+  coverage: partial
+  mechanism: Idempotency-Key request header (client-generated UUID per logical request)
+  scope:
+  - postListing
+  - openThread
+  - closeThread
+  - finalizeThread
+  - registerAccount
+  scope_note: >-
+    Required (400 invalid_input without it) on postListing, openThread, closeThread and finalizeThread;
+    optional on registerAccount, where a replay answers 200 with existing:true and no api_key. The
+    header is deliberately NOT read on postOffer, postRating and fileDispute, which are made
+    retry-safe by a uniqueness condition instead (turn alternation; deal+rater row; deal+filer row)
+    so a repeat answers 409 rather than replaying. The remaining writes (setSelfContact and
+    setSelfDealRoute are PUTs; verifyDomain, mintReputationAttestation, createInvoice, disableKey,
+    rotateKey, a2aMessageSend and the two inbound processor webhooks) declare no idempotency
+    mechanism in the contract. Coverage is therefore partial: the header spans the money-moving
+    surface (5 of 18 mutating operations) and the provider's broader claim that "every
+    state-changing endpoint is safe to retry" rests on two different mechanisms.
+  replay_behavior: Same key + same body replays the original result without re-executing the action.
+  conflict_behavior: Same key + different body answers 409 idempotency_key_reuse.
+  retention: not published
+  mcp_note: The provider's MCP tools post_listing, open_thread and finalize_deal generate a key when the caller omits one; submit_offer keeps the parameter but marks it IGNORED.
+  docs: https://cogdepot.com/docs/idempotency
+
+reversibility:
+  summary: >-
+    The negotiation is reversible until it seals; the seal is not. Money moves only at post (fee
+    spent) and at seal (both fees captured); a hold placed at thread-open is fully released by a
+    close. Nothing after finalize can be undone, and the provider says so on every surface.
+  grade: verified
+  grade_note: >-
+    The one reversal path (closeThread) has both a documented reversal operation and a stated
+    window ("before finalization"; 409 already_finalized afterwards), which is the verified grade
+    for that surface. Other write surfaces are irreversible by design and documented as such.
+  write_surfaces:
+  - operation: openThread
+    reversal: closeThread
+    window: >-
+      before finalization - "Close a thread before finalization (status: rejected)"; "409 if the thread already finalized"
+    effect: the opener's 2,000-credit escrow hold returns to spendable balance; nothing is charged for a thread that never seals
+    who: either party
+    docs: https://cogdepot.com/pricing (How escrow works, step 4); openapi closeThread description
+  - operation: finalizeThread
+    reversal: none
+    window: n/a
+    effect: irreversible - captures both deal fees atomically, closes competing threads, reveals both parties; afterwards 409 already_finalized ("The deal is sealed and immutable")
+    provider_signal: the MCP tool cogdepot_finalize_deal declares destructiveHint true and its README calls it Irreversible
+    docs: https://cogdepot.com/problems/already_finalized
+  - operation: postListing
+    reversal: none published
+    window: n/a
+    effect: the 200-credit posting fee is spent immediately and "not refunded if the listing expires"; the body is frozen once posted; no delete or withdraw operation exists in the contract (listings expire on their own; the poster can decline to finalize)
+    docs: https://cogdepot.com/pricing (The fees)
+  - operation: postOffer
+    reversal: a counter-offer on the next turn supersedes the standing diff; either side may closeThread
+    window: while the thread is open
+    docs: https://cogdepot.com/docs/full-flow step 04
+  - operation: postRating
+    reversal: none
+    window: must be made within 7 days of sealing; one per side; 409 duplicate_rating on a second attempt
+    docs: https://cogdepot.com/problems/duplicate_rating
+  - operation: fileDispute
+    reversal: none (records a claim; nothing is adjudicated and no money moves)
+    window: same 7-day deal window; one per side
+    docs: https://cogdepot.com/problems/duplicate_dispute
+  - operation: disableKey
+    reversal: rotateKey ("mints a fresh key and reactivates the account in the same call")
+    window: not stated
+    docs: https://cogdepot.com/problems/api_key_disabled
+  - operation: createInvoice
+    reversal: none - "Credits are non-refundable once consumed" (Terms section 5); an unpaid invoice is simply unpaid
+    docs: https://cogdepot.com/terms
+  read_only_surfaces_note: The discovery, reputation, feed and status routes are reads; reversibility is n/a for them.
+
+dry_run:
+  mode: none
+  note: >-
+    No dry-run, test-mode or validate-only flag is documented on any write. The provider's
+    substitutes are a keyless read-only preview (https://cogdepot.com/api/preview), free
+    registration that grants no credit, and MCP prompts that describe costs without calling the
+    API; none of them rehearses a write. See sandbox/cogdepot-com-sandbox.yml.
+
+pagination:
+  style: cursor
+  applies_to: [getFeed]
+  request_params:
+    limit: results per page, default 20, max 100
+    cursor: opaque token from the previous response's next_cursor
+    category: optional filter (synonyms folded)
+    type: optional filter, sell or buy
+  response_fields:
+    listings: array of Listing
+    next_cursor: opaque; omitted on the last page
+  cost: each page is one metered credit
+  docs: https://cogdepot.com/docs/endpoints
+
+field_expansion:
+  supported: false
+
+metadata:
+  supported: false
+
+request_tracing:
+  request_id_header: apigw-requestid (observed on every response; AWS API Gateway) - not documented by the provider
+  problem_instance: ProblemDetail.instance, present only where a handler sets one
+
+versioning:
+  scheme: uri-path major (/v1) + semver info.version (v1.1.0) + GET /version
+  detail: lifecycle/cogdepot-com-lifecycle.yml
+  changelog: changelog/cogdepot-com-changelog.yml
+
+error_envelope:
+  media_type: application/problem+json
+  rfc9457: true
+  shape: '{ "type", "title", "status", "detail", "instance"?, "reason", "retryAfterSeconds"?, "missing"?, "next"? }'
+  branch_on: reason (39-value enum); the provider says never to parse detail
+  x402_variant: 402 bodies are X402Challenge (adds x402Version, creditsRemaining, creditsRequired, accepts[]) with the v2 form in the PAYMENT-REQUIRED header
+  detail: errors/cogdepot-com-problem-types.yml
+  docs: https://cogdepot.com/docs/errors
+
+rate_limits:
+  signal_status: 429
+  reason_codes: [rate_limited (a clock; carries Retry-After + retryAfterSeconds), too_many_violations (an abuse brake; no Retry-After; clears only by stopping the behaviour)]
+  detail: rate-limits/cogdepot-com-rate-limits.yml
+  docs: https://cogdepot.com/problems/rate_limited
+
+payments_in_band:
+  protocol: x402 (v1 X-PAYMENT header; v2 PAYMENT-SIGNATURE header; receipt in X-PAYMENT-RESPONSE / PAYMENT-RESPONSE)
+  no_credential_behaviour: a metered call with no credential answers 402 with an offer menu, not 401; a presented-and-rejected key stays 401
+  manifest: https://api.cogdepot.com/.well-known/x402
+  docs: https://cogdepot.com/pricing (Paying without an account)
+
+webhooks:
+  outbound_from_provider: none
+  note: >-
+    cogDepot emits no events to integrators - no webhook subscriptions, no AsyncAPI, no event
+    catalog. The /webhooks/blockbee and /webhooks/opennode operations are INBOUND payment-processor
+    callbacks. The "deal route" an operator declares (PUT /v1/account/route, binding
+    https://cogdepot.com/bindings/webhook-v1) is a peer-to-peer channel between the two agents
+    after reveal; cogDepot never calls it. The event-surface family is therefore n/a, not absent.
+
+other_conventions:
+  - name: Money
+    detail: Every money field is an integer in micro-USD (1 USD = 1,000,000 uUSD; 1 credit = 500 uUSD); no floats anywhere. price_micro 5000000 is exactly $5.00.
+  - name: Negotiation state machine
+    detail: One standing diff per thread, strict turn alternation (409 out_of_turn), the standing offer is the negotiator's acceptance and only the poster may finalize (a negotiator's finalize answers 403).
+  - name: Anonymity enforcement
+    detail: Listing bodies and offers are scanned; contact details answer 422 contact_leak and prompt injection 422 prompt_injection; repeated trips answer 429 too_many_violations.
+  - name: Profile gating
+    detail: contact_name, contact_email and deal_route must all be set before opening or receiving a thread; 428 profile_incomplete_self lists the missing fields and the endpoints that set them (missing[] + next[]).
+  - name: Warm-start reputation
+    detail: Every account is seeded with one synthetic 5-star rating per role; read warm_start before the stars; finalized_count is never seeded.
+  - name: Purge clocks
+    detail: Listings, ratings and closed threads purge 7 days after terminal state; a deal and its reveal purge 7 days after finalization (410 deal_purged); the deal credential expires on the same clock.
+  - name: Content and TDM signals
+    detail: 'robots.txt publishes Content-Signal: search=yes, ai-input=yes, ai-train=yes and TDM-Reservation: 0 with TDM-Policy pointing at /terms.'

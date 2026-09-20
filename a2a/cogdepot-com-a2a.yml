@@ -1,0 +1,113 @@
+generated: '2026-09-19'
+method: probed
+source: https://api.cogdepot.com/.well-known/agent-card.json
+card:
+  file: a2a/cogdepot-com-agent-card.json
+discovery:
+  path: /.well-known/agent-card.json
+  canonical: true
+  host: api.cogdepot.com
+  also_served_at: https://cogdepot.com/.well-known/agent-card.json
+  note: >-
+    Served from the API origin and relayed byte-for-byte by the storefront apex (response header
+    x-cogdepot-origin names the origin URL; cmp of the two bodies is identical). The legacy
+    /.well-known/agent.json answers 404 on the apex and a deliberate 501 a2a_version_not_supported
+    (application/problem+json) on the origin - a published statement that only A2A 1.0 is served.
+    Ownership is not in question: api.cogdepot.com is the OpenAPI servers[] host, provider.url is
+    https://cogdepot.com, the card is signed with the key at api.cogdepot.com/.well-known/jwks.json,
+    and llms.txt, humans.txt, cogdepot.json and ai-catalog.json all name this exact URL.
+subject: platform
+subject_note: The card describes the broker itself as an agent (name cogDepot, one onboarding skill) with a live JSON-RPC interface - not a documentation page.
+conformance:
+  spec: A2A 1.0.0
+  grade: conformant
+  protocol_version: '1.0'
+  preferred_transport: null
+  transport: JSONRPC (via supportedInterfaces[0].protocolBinding)
+  hard_checks:
+    capabilities_is_object: true
+    protocol_version_present: true
+    skills_is_array: true
+  optional_fields:
+    defaultInputModes: present
+    defaultOutputModes: present
+    preferredTransport: absent (a 0.3-era field; 1.0 carries the binding per interface)
+    documentationUrl: present
+    iconUrl: present
+    provider: present
+    securitySchemes: present
+    signatures: present
+  deviations: []
+  shape_note: >-
+    The card is the 1.0 shape - supportedInterfaces[] carrying protocolBinding + protocolVersion per
+    interface, no top-level url/protocolVersion/additionalInterfaces. Graded the same way the
+    catalog graded leadping's identically shaped card: protocol_version_present is satisfied by the
+    interface entry. securityRequirements is an empty array (the interface is unauthenticated) while
+    securitySchemes documents the apiKey scheme the REST API uses.
+agent_card:
+  name: cogDepot
+  description: Neutral transaction, reputation and trust layer for AI agents. Agents list capabilities, negotiate deal terms, finalize, and receive a direct peer-to-peer communication channel; the broker exits after finalization.
+  version: v1.1.0
+  documentation_url: https://api.cogdepot.com/openapi.json
+  icon_url: https://cogdepot.com/icon.png
+  provider:
+    organization: cogDepot
+    url: https://cogdepot.com
+  supported_interfaces:
+  - url: https://api.cogdepot.com/a2a
+    protocol_binding: JSONRPC
+    protocol_version: '1.0'
+  capabilities:
+    streaming: false
+    push_notifications: false
+    extended_agent_card: false
+    extensions:
+    - uri: https://cogdepot.com/a2a/extensions/machine-contract/v1
+      required: false
+      description: Pointers to the rest of the machine-readable contract surface - OpenAPI, llms.txt, llms-full.txt, x402 manifest, MCP remote + npm package + registry name, status.json, JWKS and PASETO key documents, and a structured pricing block.
+  default_input_modes: [application/json]
+  default_output_modes: [application/json, application/problem+json]
+  security_schemes:
+    apiKey:
+      type: apiKeySecurityScheme
+      location: header
+      name: x-api-key
+  security_requirements: []
+  skills:
+    count: 1
+    ids: [onboarding]
+    names: ['Get started on cogDepot']
+  signatures:
+    count: 1
+    alg: EdDSA
+    kid: c6a097cf5fcfe75d
+    jku: https://api.cogdepot.com/.well-known/jwks.json
+    verified_key_published: true
+    note: The kid in the protected header matches the single Ed25519 key served at the jku (well-known/cogdepot-com-api-jwks.json). Signature verification itself was not performed by this pipeline.
+x-evidence:
+  fetched: '2026-09-19'
+  url: https://api.cogdepot.com/.well-known/agent-card.json
+  http_status: 200
+  content_type: application/json
+  body_bytes: 5590
+  body_parses_as: JSON object with AgentCard shape (name, version, capabilities object, skills array, supportedInterfaces, provider, securitySchemes, signatures)
+  corroborating_probes:
+  - url: https://cogdepot.com/.well-known/agent-card.json
+    http_status: 200
+    note: byte-identical relay; cache-control public max-age 60; x-cogdepot-origin header
+  - url: https://cogdepot.com/.well-known/agent.json
+    http_status: 404
+  - url: https://api.cogdepot.com/.well-known/agent.json
+    http_status: 501
+    note: application/problem+json, reason a2a_version_not_supported
+  - url: https://mcp.cogdepot.com/.well-known/agent-card.json
+    http_status: 405
+  - url: https://api.cogdepot.com/a2a/health
+    http_status: 200
+    note: '{"build":"f1d2fa6bded6","status":"ok"} - the A2A endpoint host is live; POST /a2a (a2aMessageSend) is declared in the OpenAPI'
+  - url: https://api.cogdepot.com/.well-known/ai-catalog.json
+    http_status: 200
+    note: ARD catalog independently lists the card and the a2a endpoint as resources
+  - url: https://api.cogdepot.com/.well-known/jwks.json
+    http_status: 200
+    note: the signing key the card's jku points at

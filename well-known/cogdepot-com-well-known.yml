@@ -1,0 +1,237 @@
+generated: '2026-09-19'
+method: probed
+source: >-
+  Live GET probes of the closed /.well-known/ path list on cogdepot.com, www.cogdepot.com,
+  api.cogdepot.com (the API and OpenAPI servers[] host) and mcp.cogdepot.com (the MCP resource
+  server named in mcp/cogdepot-com-mcp.yml), plus the Cognito issuer that the MCP host's RFC 8414
+  document names as its jwks_uri, on 2026-09-19. Every row is a request that was issued; every
+  status is the one returned.
+summary:
+  hosts_probed: 5
+  documents_served: 13
+  path_echo_control: passed
+  note: >-
+    cogDepot splits its discovery surface by role. The apex serves security.txt, robots.txt with
+    Content-Signal and TDM-Policy lines, llms.txt and a byte-for-byte relay of the Agent Card; the
+    API origin owns the machine contract (agent card, ARD ai-catalog, native cogdepot.json manifest,
+    x402 manifest, EdDSA JWKS for the card signature, PASETO public keys for deal and reputation
+    tokens, security.txt); the MCP host serves the RFC 9728 protected-resource and RFC 8414
+    authorization-server documents and nothing else (every other path answers 405 from the JSON-RPC
+    handler). No host serves an RFC 9727 api-catalog, an APIs.json, OpenID discovery on its own
+    domain (the OIDC issuer is a Cognito user pool), ai-plugin.json, UCP, ACP or AAuth.
+  negative_controls:
+  - url: https://cogdepot.com/.well-known/cogdepot-negative-control-7f3ab91c.json
+    status: 404
+  - url: https://api.cogdepot.com/.well-known/cogdepot-negative-control-7f3ab91c.json
+    status: 404
+  - url: https://mcp.cogdepot.com/.well-known/mcp.json
+    status: 405
+    note: The MCP host answers 405 Method-not-allowed JSON-RPC errors for every GET except its two OAuth documents, so a 200 there is a real document, not a catch-all.
+hosts:
+- host: cogdepot.com
+  role: Storefront and documentation host (www.cogdepot.com 301s here)
+  documents:
+  - path: /.well-known/security.txt
+    status: 200
+    content_type: text/plain; charset=utf-8
+    file: cogdepot-com-security.txt
+    standard: RFC 9116
+    note: Contact security@cogdepot.com, Expires 2027-09-20, Policy https://cogdepot.com/about, two Canonical lines (apex + API origin).
+  - path: /.well-known/agent-card.json
+    status: 200
+    content_type: application/json
+    file: cogdepot-com-agent-card.json
+    standard: A2A Agent Card
+    note: Relayed byte-for-byte from the API origin (x-cogdepot-origin header names https://api.cogdepot.com/.well-known/agent-card.json). Graded in a2a/cogdepot-com-a2a.yml.
+  - path: /.well-known/agent.json
+    status: 404
+  - path: /.well-known/openid-configuration
+    status: 404
+  - path: /.well-known/oauth-authorization-server
+    status: 404
+  - path: /.well-known/oauth-protected-resource
+    status: 404
+  - path: /.well-known/api-catalog
+    status: 404
+  - path: /.well-known/api-catalog.json
+    status: 404
+  - path: /.well-known/ai-plugin.json
+    status: 404
+  - path: /.well-known/ucp.json
+    status: 404
+  - path: /.well-known/acp.json
+    status: 404
+  - path: /.well-known/aauth-resource.json
+    status: 404
+  - path: /.well-known/apis.json
+    status: 404
+  - path: /apis.json
+    status: 404
+  - path: /apis.yml
+    status: 404
+  - path: /.well-known/x402
+    status: 301
+    note: Redirects to https://api.cogdepot.com/.well-known/x402 (recorded below).
+  - path: /llms.txt
+    status: 200
+    content_type: text/plain; charset=utf-8
+    file: ../llms/cogdepot-com-llms.txt
+    note: Saved verbatim under llms/. Not a /.well-known/ path; listed because the apex is the documented llms.txt host.
+- host: www.cogdepot.com
+  role: Redirect alias
+  documents:
+  - path: /.well-known/security.txt
+    status: 301
+    note: Every path on www 301s to the same path on cogdepot.com; nothing is served from www directly.
+  - path: /.well-known/agent-card.json
+    status: 301
+  - path: /.well-known/openid-configuration
+    status: 301
+  - path: /.well-known/oauth-authorization-server
+    status: 301
+  - path: /.well-known/oauth-protected-resource
+    status: 301
+  - path: /.well-known/api-catalog
+    status: 301
+  - path: /.well-known/ai-plugin.json
+    status: 301
+  - path: /.well-known/apis.json
+    status: 301
+  - path: /apis.json
+    status: 301
+- host: api.cogdepot.com
+  role: API origin (apis[].baseURL and OpenAPI servers[] host) - owns the machine contract
+  documents:
+  - path: /.well-known/security.txt
+    status: 200
+    content_type: text/plain; charset=utf-8
+    file: cogdepot-com-api-security.txt
+    standard: RFC 9116
+  - path: /.well-known/agent-card.json
+    status: 200
+    content_type: application/json
+    file: cogdepot-com-api-agent-card.json
+    standard: A2A Agent Card
+    note: The origin copy; byte-identical to the apex relay (cmp verified 2026-09-19).
+  - path: /.well-known/agent.json
+    status: 501
+    content_type: application/problem+json
+    note: Deliberate 501 a2a_version_not_supported pointing at the 1.0 card - a published non-support statement, not an absence.
+  - path: /.well-known/jwks.json
+    status: 200
+    content_type: application/json
+    file: cogdepot-com-api-jwks.json
+    standard: RFC 7517 JWK Set
+    note: One Ed25519 OKP key (kid c6a097cf5fcfe75d) that signs the Agent Card's JWS signature.
+  - path: /.well-known/paseto-keys.json
+    status: 200
+    content_type: application/json
+    file: cogdepot-com-api-paseto-keys.json
+    standard: PASETO v4.public key set (provider-defined document)
+    note: Ed25519 public key for offline verification of deal credentials (typ cogdepot.deal.v1) and reputation attestations (typ cogdepot.reputation.v1); token_ttl_seconds 604800.
+  - path: /.well-known/x402
+    status: 200
+    content_type: application/json
+    file: cogdepot-com-api-x402.json
+    standard: x402 payment manifest (v1 and v2 advertised)
+    note: Network base, asset USDC, three exact-scheme tiers, twelve payable endpoints, clientNotes. A live unauthenticated GET /v1/feed on the same day returned 402 with a PAYMENT-REQUIRED header and an accepts[] body, so the manifest describes deployed behaviour.
+  - path: /.well-known/ai-catalog.json
+    status: 200
+    content_type: application/json
+    file: cogdepot-com-api-ai-catalog.json
+    standard: Agentic Resource Discovery (ARD) catalog
+  - path: /.well-known/cogdepot.json
+    status: 200
+    content_type: application/json
+    file: cogdepot-com-api-cogdepot.json
+    standard: provider-native discovery manifest
+    note: Named as entryPoint by the ai-catalog; carries pricing, registration, domain-grant, reputation and MCP pointers.
+  - path: /.well-known/openid-configuration
+    status: 404
+  - path: /.well-known/oauth-authorization-server
+    status: 404
+  - path: /.well-known/oauth-protected-resource
+    status: 404
+  - path: /.well-known/api-catalog
+    status: 404
+  - path: /.well-known/api-catalog.json
+    status: 404
+  - path: /.well-known/ai-plugin.json
+    status: 404
+  - path: /.well-known/ucp.json
+    status: 404
+  - path: /.well-known/acp.json
+    status: 404
+  - path: /.well-known/aauth-resource.json
+    status: 404
+  - path: /.well-known/mcp.json
+    status: 404
+  - path: /.well-known/apis.json
+    status: 404
+  - path: /apis.json
+    status: 404
+  - path: /apis.yml
+    status: 404
+  - path: /openapi.json
+    status: 200
+    content_type: application/json
+    file: ../openapi/_original/cogdepot-com-openapi.json
+    note: Not a /.well-known/ path; the contract root the whole surface points at. Saved verbatim under openapi/_original/.
+  - path: /status.json
+    status: 200
+    content_type: application/json
+    file: ../lifecycle/cogdepot-com-status-snapshot.json
+    note: Atlassian-shaped status document; snapshot saved under lifecycle/.
+- host: mcp.cogdepot.com
+  role: Remote MCP resource server (mcp/cogdepot-com-mcp.yml deployment.endpoint)
+  documents:
+  - path: /.well-known/oauth-protected-resource
+    status: 200
+    content_type: application/json
+    file: cogdepot-com-mcp-oauth-protected-resource.json
+    standard: RFC 9728
+    note: resource https://mcp.cogdepot.com; authorization_servers [https://mcp.cogdepot.com]; four cogdepot/* scopes; bearer_methods header.
+  - path: /.well-known/oauth-authorization-server
+    status: 200
+    content_type: application/json
+    file: cogdepot-com-mcp-oauth-authorization-server.json
+    standard: RFC 8414
+    note: >-
+      issuer https://mcp.cogdepot.com; authorization_code + refresh_token; PKCE S256;
+      client_secret_basic/post; scopes cogdepot/read, cogdepot/trade:negotiate,
+      cogdepot/trade:finalize, cogdepot/account:write. No registration_endpoint (no RFC 7591 dynamic
+      client registration advertised). jwks_uri, userinfo, revocation and end_session point at the
+      Cognito user pool below.
+  - path: /.well-known/openid-configuration
+    status: 405
+  - path: /.well-known/security.txt
+    status: 405
+  - path: /.well-known/api-catalog
+    status: 405
+  - path: /.well-known/ai-plugin.json
+    status: 405
+  - path: /.well-known/agent-card.json
+    status: 405
+  - path: /.well-known/agent.json
+    status: 405
+  - path: /.well-known/ucp.json
+    status: 405
+  - path: /.well-known/acp.json
+    status: 405
+  - path: /.well-known/aauth-resource.json
+    status: 405
+  - path: /.well-known/apis.json
+    status: 405
+  - path: /apis.json
+    status: 405
+  - path: /apis.yml
+    status: 405
+- host: cognito-idp.us-east-1.amazonaws.com
+  role: OIDC issuer backing the MCP authorization server (third-party host named by the RFC 8414 jwks_uri; AWS Cognito user pool us-east-1_Iv3zkxuII)
+  documents:
+  - path: /us-east-1_Iv3zkxuII/.well-known/openid-configuration
+    status: 200
+    content_type: application/json
+    file: cogdepot-com-cognito-openid-configuration.json
+    standard: OpenID Connect Discovery 1.0
+    note: Recorded for completeness of the delegated-identity chain. This is AWS infrastructure cogDepot configures, not a cogDepot-controlled host; scopes there are openid/email/phone/profile, the cogdepot/* scopes live on mcp.cogdepot.com.

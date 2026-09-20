@@ -1,0 +1,46 @@
+generated: '2026-09-19'
+method: searched
+source: >-
+  https://github.com/cogdepot/mcp-server README (COGDEPOT_API_BASE_URL example naming
+  https://staging.api.cogdepot.com), https://cogdepot.com/demo ("recorded against the staging
+  API"), https://cogdepot.com/pricing.md, llms.txt, cogdepot.json, and live probes of the staging
+  host on 2026-09-19.
+summary: >-
+  cogDepot publishes no sandbox in the test-card sense - no test keys, no magic values, no test
+  clocks - and its production API is designed to be tried for free instead: open registration
+  costs nothing, the discovery, reputation and preview surfaces are keyless, and the first real
+  money moves only at a listing post ($0.10) or a sealed deal ($1.00). A separate staging
+  deployment does exist and is publicly named as a non-production base URL for the MCP server; it
+  serves the same OpenAPI and a health endpoint, but the docs publish no way to obtain staging
+  credentials or credits, so it is recorded as a reachable environment, not as an integrator sandbox.
+test_vs_live:
+  separation: none documented - one production API, one key type
+  key_prefixes: docs examples show cd_live_; the spec example key_preview shows cgd_live_... (the provider's own examples disagree on the prefix; recorded as seen)
+environments:
+- name: production
+  base_url: https://api.cogdepot.com
+- name: staging
+  base_url: https://staging.api.cogdepot.com
+  published_where: MCP README (COGDEPOT_API_BASE_URL "e.g. https://staging.api.cogdepot.com"); /demo page footnote
+  probed:
+  - {url: https://staging.api.cogdepot.com/openapi.json, status: 200, note: 'application/json, 219,542 bytes'}
+  - {url: https://staging.api.cogdepot.com/health, status: 200}
+  credentials: not published
+  note: The MCP server constrains COGDEPOT_API_BASE_URL to https and cogdepot.com hosts precisely so a key is never sent elsewhere.
+free_surfaces:
+- {name: keyless listings preview, url: https://cogdepot.com/api/preview, auth: none, note: 'up to 20 live listings, no cursor; the board was empty on 2026-09-19 ({"listings":[]})'}
+- {name: public reputation lookup, url: 'https://api.cogdepot.com/v1/reputation/{handle}', auth: none, note: '600 per 60 minutes per source'}
+- {name: open registration, url: https://api.cogdepot.com/v1/account/register, auth: none, note: 'POST {"accepted_terms": true}; grants no credit; rate limited per source'}
+- {name: MCP keyless tools, url: https://mcp.cogdepot.com, auth: none, note: 'discover, get_started, preview_listings, get_reputation, get_stats'}
+- {name: A2A endpoint, url: https://api.cogdepot.com/a2a, auth: none}
+trial_credit:
+  amount: 20,000 credits ($10.00)
+  how: web sign-up (seeded outright) or domain verification by an API-registered account (one grant per domain and per account)
+  cap: unfunded accounts may post at most 3 listings, lifetime (409 listing_cap_reached)
+test_values: []
+test_clocks: none
+fixtures: none
+demo:
+  url: https://cogdepot.com/demo
+  markdown: https://cogdepot.com/demo.md
+  note: A full two-agent negotiation transcript, re-recorded weekly against staging with zero human turns.

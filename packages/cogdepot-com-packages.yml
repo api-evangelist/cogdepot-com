@@ -1,0 +1,47 @@
+generated: '2026-09-19'
+method: searched
+source: >-
+  https://registry.npmjs.org/@cogdepot%2Fmcp-server (dist-tags, time), the npm search API for
+  "cogdepot", https://registry.modelcontextprotocol.io/v0/servers?search=cogdepot&version=latest,
+  https://api.github.com/users/cogdepot/repos, and PyPI JSON lookups for cogdepot, cogdepot-sdk and
+  cogdepot-mcp (all 404). Checked 2026-09-19.
+summary: >-
+  cogDepot ships exactly one first-party package, and it is an MCP server rather than a client SDK:
+  @cogdepot/mcp-server on npm (0.8.2, published 2026-09-13, MIT, bin cogdepot-mcp), mirrored in the
+  official MCP Registry as io.github.cogdepot/cogdepot. No client library exists in any language
+  registry - the provider's position (llms.txt, docs) is that the OpenAPI contract, the A2A card and
+  the MCP server are the integration surface. No SDKs pointer is emitted because an MCP server is
+  not a client SDK; the package is recorded here and in mcp/.
+sdk_count: 0
+packages:
+- language: typescript
+  registry: npm
+  name: '@cogdepot/mcp-server'
+  kind: mcp-server
+  url: https://www.npmjs.com/package/@cogdepot/mcp-server
+  install: npx -y @cogdepot/mcp-server
+  official: true
+  version: 0.8.2
+  published: '2026-09-13'
+  first_published: '2026-08-10'
+  license: MIT
+  bin: cogdepot-mcp
+  repository: https://github.com/cogdepot/mcp-server
+  homepage: https://cogdepot.com
+  note: Stdio MCP server (dist/stdio.js); the same package also contains the remote HTTP server (npm run serve:remote) that runs at https://mcp.cogdepot.com. Registry metadata read from registry.npmjs.org; the www.npmjs.com page answered 403 to our crawler UA (edge policy, not absence).
+- language: n/a
+  registry: mcp-registry
+  name: io.github.cogdepot/cogdepot
+  kind: mcp-server
+  url: https://registry.modelcontextprotocol.io/v0/servers?search=cogdepot
+  install: npx -y @cogdepot/mcp-server
+  official: true
+  version: 0.8.2
+  published: '2026-09-13'
+  note: Registry entry names the npm package (stdio transport, env COGDEPOT_API_KEY / COGDEPOT_API_BASE_URL) and a streamable-http remote at https://mcp.cogdepot.com. Status active; isLatest true for 0.8.2.
+registries_checked:
+- {registry: npm, query: '@cogdepot/mcp-server + search "cogdepot"', result: '1 package'}
+- {registry: pypi, query: 'cogdepot, cogdepot-sdk, cogdepot-mcp', result: '404 - none'}
+- {registry: github, query: 'org cogdepot', result: '2 repos: .github (community health files), mcp-server'}
+- {registry: mcp-registry, query: 'search=cogdepot', result: '1 server, versions 0.1.2 through 0.8.2'}
+- {registry: 'maven, nuget, pkg.go.dev, rubygems, packagist, crates.io', query: 'not probed', result: 'no first-party client named anywhere on the provider surface (docs, llms.txt, GitHub org), so no candidate to look up'}

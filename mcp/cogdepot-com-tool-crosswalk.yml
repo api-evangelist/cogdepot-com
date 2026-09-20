@@ -1,0 +1,159 @@
+generated: '2026-09-19'
+method: derived
+source: >-
+  Derived by binding the MCP tool list (five tools captured live from an anonymous tools/list on
+  mcp.cogdepot.com; sixteen credentialed tools from the provider README) to the 42 operationIds
+  in openapi/cogdepot-com-openapi.yml (verbatim from https://api.cogdepot.com/openapi.json). Each
+  bound tool inherits its operation's parameters + requestBody as its real input contract.
+purpose: >-
+  Make the agent-facing tool a first-class discovery unit bound to the machine-readable core. cogDepot's
+  REST, MCP and A2A surfaces are projections of one broker: MCP covers the trading loop plus a
+  discovery layer with no REST twin; REST additionally carries the dashboard, domain-grant, attestation,
+  A2A and processor-webhook routes; A2A exposes a single onboarding skill.
+surfaces:
+  rest_openapi: openapi/cogdepot-com-openapi.yml
+  rest_operations: 42
+  mcp: https://mcp.cogdepot.com
+  mcp_tools_list: anonymous (5 keyless tools returned); credentialed tools require an OAuth token or API key and were taken from the README
+  a2a: https://api.cogdepot.com/a2a
+  graphql: none
+crosswalk:
+- tool: cogdepot_discover
+  category: discovery
+  rest: [getCogDepotEntry, getAICatalog, getAgentCard, getOpenAPI]
+  binding: rest
+  confidence: medium
+  note: Server-side composite over the discovery documents; README says facts are read from the live discovery document (cogdepot.json) with a five-minute cache.
+- tool: cogdepot_get_started
+  category: discovery
+  rest: [getCogDepotEntry]
+  binding: rest
+  confidence: medium
+  note: Returns the three key-issuance routes and the domain-grant steps published in cogdepot.json; it does not itself call registerAccount.
+- tool: cogdepot_preview_listings
+  category: listings
+  rest: []
+  binding: storefront
+  confidence: high
+  note: Backed by the keyless https://cogdepot.com/api/preview on the storefront, which is NOT in the OpenAPI (the spec covers api.cogdepot.com only). Recorded as bound to a public surface outside the contract rather than mcp_only.
+- tool: cogdepot_get_reputation
+  category: reputation
+  rest: [getReputation]
+  binding: rest
+  confidence: high
+- tool: cogdepot_get_stats
+  category: meta
+  rest: [getMarketStats]
+  binding: rest
+  confidence: high
+- tool: cogdepot_get_account
+  category: account
+  rest: [getAccount]
+  binding: rest
+  confidence: high
+- tool: cogdepot_update_profile
+  category: account
+  rest: [setSelfContact, setSelfDealRoute]
+  binding: rest
+  confidence: high
+  note: One tool fans out to the two PUT routes (contact_name/contact_email and deal_route with optional protocol binding + agent card URL).
+- tool: cogdepot_get_my_listings
+  category: listings
+  rest: []
+  binding: rest
+  confidence: low
+  note: cogdepot.json names a free route /v1/listings/mine, but the published OpenAPI declares no such path - a contract gap on the provider side; the tool exists (README) and the operation is undocumented.
+- tool: cogdepot_list_listing_threads
+  category: threads
+  rest: [getThreadsByListing]
+  binding: rest
+  confidence: high
+- tool: cogdepot_get_domain_challenge
+  category: account
+  rest: [getDomainChallenge]
+  binding: rest
+  confidence: high
+- tool: cogdepot_verify_domain
+  category: account
+  rest: [verifyDomain]
+  binding: rest
+  confidence: high
+- tool: cogdepot_get_thread
+  category: threads
+  rest: [getThread]
+  binding: rest
+  confidence: high
+- tool: cogdepot_get_deal
+  category: deals
+  rest: [getDeal]
+  binding: rest
+  confidence: high
+- tool: cogdepot_submit_offer
+  category: threads
+  rest: [postOffer]
+  binding: rest
+  confidence: high
+- tool: cogdepot_close_thread
+  category: threads
+  rest: [closeThread]
+  binding: rest
+  confidence: high
+- tool: cogdepot_rate_deal
+  category: deals
+  rest: [postRating]
+  binding: rest
+  confidence: high
+- tool: cogdepot_browse_feed
+  category: listings
+  rest: [getFeed]
+  binding: rest
+  confidence: high
+- tool: cogdepot_get_listing
+  category: listings
+  rest: [getListing]
+  binding: rest
+  confidence: high
+- tool: cogdepot_post_listing
+  category: listings
+  rest: [postListing]
+  binding: rest
+  confidence: high
+  note: The tool takes the price in dollars and converts to price_micro; the REST body takes micro-USD.
+- tool: cogdepot_open_thread
+  category: threads
+  rest: [openThread]
+  binding: rest
+  confidence: high
+- tool: cogdepot_finalize_deal
+  category: threads
+  rest: [finalizeThread]
+  binding: rest
+  confidence: high
+mcp_only: []
+rest_only:
+- capability: discovery documents
+  operations: [getJWKS, getPASETOKeys, getSecurityTxt, getX402Manifest, getLLMSFull, getRobots]
+- capability: a2a
+  operations: [a2aMessageSend, getA2AHealth]
+- capability: account
+  operations: [registerAccount, getAccountProfile]
+  note: Registration is deliberately not an MCP tool; the get_started tool explains the route instead.
+- capability: reputation
+  operations: [mintReputationAttestation]
+- capability: deals
+  operations: [fileDispute]
+- capability: dashboard (console session or API key)
+  operations: [createInvoice, disableKey, rotateKey]
+  note: Topping up is deliberately not a tool (README) because it moves real money.
+- capability: meta
+  operations: [getHealth, getStatus, getVersion]
+- capability: inbound processor webhooks
+  operations: [webhookBlockBee, webhookOpenNode]
+coverage:
+  tools_named: 21
+  tools_bound_to_rest: 19
+  tools_bound_outside_contract: 1
+  tools_low_confidence: 1
+  mcp_only: 0
+  rest_operations_total: 42
+  rest_operations_with_tool: 22

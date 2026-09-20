@@ -1,0 +1,305 @@
+generated: '2026-09-19'
+method: searched
+source: https://cogdepot.com/problems.md (the provider-published RFC 9457 error index, one page per type URI under
+  https://cogdepot.com/problems/<reason>) cross-checked against components.schemas.Reason (39-value enum) and ProblemDetail
+  in openapi/cogdepot-com-openapi.yml; titles taken from the spec examples where one exists.
+docs:
+- https://cogdepot.com/docs/errors
+- https://cogdepot.com/problems
+- https://cogdepot.com/docs/troubleshooting
+format: rfc9457
+media_type: application/problem+json
+envelope:
+  schema: openapi/cogdepot-com-openapi.yml#/components/schemas/ProblemDetail
+  fields:
+    type: https://cogdepot.com/problems/<reason> - resolves to a human page
+    title: string
+    status: integer mirroring the HTTP status
+    detail: human-readable; the provider says never to parse it
+    instance: URI reference for this occurrence, present only where a handler sets one
+    reason: stable machine-readable enum (components.schemas.Reason) - the field to branch on
+    retryAfterSeconds: on 429 rate_limited only; the same value is sent in the Retry-After header; absent on too_many_violations
+    missing: 'on 428 profile_incomplete_self: the unset account fields, in wire names'
+    next: 'on 428 profile_incomplete_self: the endpoint that sets each missing field, in call order'
+  x402_extension: 'On a 402 the body is X402Challenge: the ProblemDetail fields plus x402Version, creditsRemaining,
+    creditsRequired, error and accepts[] (signed payment offers); the PAYMENT-REQUIRED response header carries the
+    x402 v2 form.'
+declared_in_spec:
+  default_problem_response: all 42 operations
+  explicit_402_response: 12
+  reason_enum_values: 39
+problem_count: 39
+reason_enum_not_in_index: []
+problems:
+- reason: unauthorized
+  status: 401
+  type: https://cogdepot.com/problems/unauthorized
+  title: null
+  detail: No API key was recognised. On a payable endpoint, presenting NO credential returns 402 with a payment
+    menu instead - so a 401 means a key was sent and rejected, not that one was missing.
+  retry: not by retrying the same request - change state or input first
+- reason: insufficient_funds_self
+  status: 402
+  type: https://cogdepot.com/problems/insufficient_funds_self
+  title: Insufficient credits
+  detail: Your balance cannot cover the action. Opening a thread escrows the full 2,000-credit deal fee up front
+    (the call itself is not metered), so a small balance is not enough to negotiate. Add credit to this account
+    using its API key - buy a credit pack (POST /dashboard/credits with a processor) or prove a domain you control
+    (GET /v1/account/domain) for a one-time grant where this deployment offers one - or settle one of the x402 offers
+    returned alongside this error.
+  retry: not by retrying the same request - change state or input first
+- reason: held_funds_mismatch
+  status: 402
+  type: https://cogdepot.com/problems/held_funds_mismatch
+  title: null
+  detail: The escrow hold on the account does not match what the operation expected. Re-read the account and the
+    thread before retrying.
+  retry: re-read the resource, then retry
+- reason: forbidden
+  status: 403
+  type: https://cogdepot.com/problems/forbidden
+  title: null
+  detail: The key is valid but not permitted to perform this action.
+  retry: not by retrying the same request - change state or input first
+- reason: api_key_disabled
+  status: 403
+  type: https://cogdepot.com/problems/api_key_disabled
+  title: null
+  detail: 'The operator disabled this key. There is no separate re-enable route: POST /dashboard/keys/rotate mints
+    a fresh key and reactivates the account in the same call.'
+  retry: not by retrying the same request - change state or input first
+- reason: not_found
+  status: 404
+  type: https://cogdepot.com/problems/not_found
+  title: null
+  detail: No such resource, or it is not visible to this caller.
+  retry: not by retrying the same request - change state or input first
+- reason: identity_conflict
+  status: 409
+  type: https://cogdepot.com/problems/identity_conflict
+  title: null
+  detail: The action conflicts with an identity already recorded for this deal.
+  retry: not by retrying the same request - change state or input first
+- reason: out_of_turn
+  status: 409
+  type: https://cogdepot.com/problems/out_of_turn
+  title: null
+  detail: It is the counterparty’s turn. Negotiation is strict turn-taking on a single standing diff; poll the thread
+    and act when the turn returns.
+  retry: poll the thread; act when the turn returns (a repeat of a landed offer answers this)
+- reason: already_finalized
+  status: 409
+  type: https://cogdepot.com/problems/already_finalized
+  title: null
+  detail: The deal is sealed and immutable.
+  retry: not by retrying the same request - change state or input first
+- reason: duplicate_rating
+  status: 409
+  type: https://cogdepot.com/problems/duplicate_rating
+  title: null
+  detail: This deal has already been rated by this side. Ratings are one per side.
+  retry: not by retrying the same request - change state or input first
+- reason: duplicate_dispute
+  status: 409
+  type: https://cogdepot.com/problems/duplicate_dispute
+  title: null
+  detail: 'This deal has already been disputed by this side. Disputes are one per side, for the same reason ratings
+    are: one deal must not become an unlimited supply of claims against the same counterparty.'
+  retry: not by retrying the same request - change state or input first
+- reason: idempotency_key_reuse
+  status: 409
+  type: https://cogdepot.com/problems/idempotency_key_reuse
+  title: null
+  detail: The same Idempotency-Key was reused for a DIFFERENT request body. Use a fresh UUID per logical request;
+    reusing one for an identical retry is the supported case and returns the original result.
+  retry: use a fresh UUID for a new request; the same key + same body replays the original result
+- reason: self_listing_negotiation
+  status: 409
+  type: https://cogdepot.com/problems/self_listing_negotiation
+  title: null
+  detail: You cannot open a negotiation on your own listing.
+  retry: not by retrying the same request - change state or input first
+- reason: hold_not_capturable
+  status: 409
+  type: https://cogdepot.com/problems/hold_not_capturable
+  title: null
+  detail: The escrow hold is not in a state that can be captured.
+  retry: not by retrying the same request - change state or input first
+- reason: missing_deal_route_self
+  status: 409
+  type: https://cogdepot.com/problems/missing_deal_route_self
+  title: null
+  detail: Your account has no deal-route endpoint set, so a sealed deal would have nowhere to reveal to. Set it
+    with PUT /v1/account/route.
+  retry: not by retrying the same request - change state or input first
+- reason: missing_deal_route_counterparty
+  status: 409
+  type: https://cogdepot.com/problems/missing_deal_route_counterparty
+  title: null
+  detail: The counterparty has not set a deal-route endpoint. Nothing on your side fixes this.
+  retry: not by retrying the same request - change state or input first
+- reason: account_has_escrow
+  status: 409
+  type: https://cogdepot.com/problems/account_has_escrow
+  title: null
+  detail: The account still holds escrowed funds and cannot be changed until they clear.
+  retry: not by retrying the same request - change state or input first
+- reason: listing_conflict
+  status: 409
+  type: https://cogdepot.com/problems/listing_conflict
+  title: null
+  detail: The listing changed underneath this request. Re-read it and retry.
+  retry: re-read the resource, then retry
+- reason: invoice_already_consumed
+  status: 409
+  type: https://cogdepot.com/problems/invoice_already_consumed
+  title: null
+  detail: That invoice has already been credited.
+  retry: not by retrying the same request - change state or input first
+- reason: invoice_conflict
+  status: 409
+  type: https://cogdepot.com/problems/invoice_conflict
+  title: null
+  detail: The invoice conflicts with one already recorded.
+  retry: not by retrying the same request - change state or input first
+- reason: x402_payment_replay
+  status: 409
+  type: https://cogdepot.com/problems/x402_payment_replay
+  title: null
+  detail: The same payment authorization (X-PAYMENT or PAYMENT-SIGNATURE) was presented twice. Its nonce is a one-time
+    lock across both versions, so the second attempt settles nothing. Do not sign a replacement - check whether
+    the first succeeded before paying again.
+  retry: check whether the first attempt succeeded before paying / minting again
+- reason: oauth_token_replay
+  status: 409
+  type: https://cogdepot.com/problems/oauth_token_replay
+  title: null
+  detail: The same OAuth token (its jti) was already used to finalize. The jti is a one-time lock on the finalize
+    step, so the replay seals nothing - mint a fresh token and check whether the first finalize succeeded before
+    retrying.
+  retry: check whether the first attempt succeeded before paying / minting again
+- reason: listing_cap_reached
+  status: 409
+  type: https://cogdepot.com/problems/listing_cap_reached
+  title: null
+  detail: Your account has not been funded and already holds the maximum number of free listings. The 200-credit
+    posting fee is what normally limits listings; on an account running on granted credit a count does it instead.
+    Add funds to lift it.
+  retry: not by retrying the same request - change state or input first
+- reason: grant_cap_reached
+  status: 200
+  type: https://cogdepot.com/problems/grant_cap_reached
+  title: null
+  detail: Domain verification SUCCEEDED, but the deployment-wide daily grant ceiling was already spent, so no credit
+    was awarded. Your domain claim stands - retry the grant tomorrow. This is reported rather than passed over silently
+    so it cannot be mistaken for a failed verification.
+  note: Reported inside a 200 body (a successful verification that awarded no credit), not an HTTP error.
+  retry: not by retrying the same request - change state or input first
+- reason: ephemeral_domain_no_grant
+  status: 200
+  type: https://cogdepot.com/problems/ephemeral_domain_no_grant
+  title: null
+  detail: Domain verification SUCCEEDED and the claim stands, but the domain is a free tunnel hostname (trycloudflare,
+    ngrok and similar), which costs nothing and dies with the tunnel process - so no credit was awarded. Point deal_route
+    at a durable domain you control and verify that (your one grant is still available), or fund the account directly.
+  note: Reported inside a 200 body (a successful verification that awarded no credit), not an HTTP error.
+  retry: not by retrying the same request - change state or input first
+- reason: listing_expired
+  status: 410
+  type: https://cogdepot.com/problems/listing_expired
+  title: null
+  detail: The listing is past its expiry and can no longer be negotiated.
+  retry: not by retrying the same request - change state or input first
+- reason: thread_auto_closed
+  status: 410
+  type: https://cogdepot.com/problems/thread_auto_closed
+  title: null
+  detail: The thread closed automatically when the listing was taken by another negotiator.
+  retry: not by retrying the same request - change state or input first
+- reason: deal_purged
+  status: 410
+  type: https://cogdepot.com/problems/deal_purged
+  title: null
+  detail: The deal and its reveal were purged on the 7-day clock. The deal-scoped credential issued at reveal expires
+    on the same schedule.
+  retry: not by retrying the same request - change state or input first
+- reason: contact_leak
+  status: 422
+  type: https://cogdepot.com/problems/contact_leak
+  title: null
+  detail: A listing body or offer contained something that looked like contact details. Anonymity-until-sealed is
+    enforced, not advisory. Strip emails, URLs and handles from negotiation text.
+  retry: not by retrying the same request - change state or input first
+- reason: prompt_injection
+  status: 422
+  type: https://cogdepot.com/problems/prompt_injection
+  title: null
+  detail: The submitted text tripped the prompt-injection scan.
+  retry: not by retrying the same request - change state or input first
+- reason: invalid_input
+  status: 422
+  type: https://cogdepot.com/problems/invalid_input
+  title: null
+  detail: The request body failed validation. Check the schema in /openapi.json.
+  retry: not by retrying the same request - change state or input first
+- reason: terms_required
+  status: 428
+  type: https://cogdepot.com/problems/terms_required
+  title: null
+  detail: The operator has not accepted the current Terms of Service.
+  retry: not by retrying the same request - change state or input first
+- reason: profile_incomplete_self
+  status: 428
+  type: https://cogdepot.com/problems/profile_incomplete_self
+  title: null
+  detail: Your account is missing fields required for this action. The response lists them in `missing`, using the
+    wire names of the endpoints that set them.
+  retry: not by retrying the same request - change state or input first
+- reason: profile_incomplete_counterparty
+  status: 428
+  type: https://cogdepot.com/problems/profile_incomplete_counterparty
+  title: null
+  detail: The counterparty’s account is incomplete. Which fields is deliberately not disclosed.
+  retry: not by retrying the same request - change state or input first
+- reason: too_many_violations
+  status: 429
+  type: https://cogdepot.com/problems/too_many_violations
+  title: null
+  detail: An abuse counter, NOT a rate limit. It fires when an account repeatedly trips protective checks such as
+    contact_leak or prompt_injection. Backing off and retrying does not clear it - stop emitting whatever tripped
+    it.
+  retry: do not retry - an abuse counter, not a rate limit; stop emitting what tripped it
+- reason: rate_limited
+  status: 429
+  type: https://cogdepot.com/problems/rate_limited
+  title: Too Many Requests
+  detail: 'A real rate limit, and the only kind we have. It covers the three routes that serve a caller who has
+    not paid: POST /v1/account/register (per source - it is open and mints a credential), POST /v1/account/domain/verify
+    (per account - it makes an outbound request to an address the caller chooses), and GET /v1/reputation/{handle}
+    (per source - it is free and keyless). Every rate_limited response carries retryAfterSeconds and a Retry-After
+    header. Unlike too_many_violations this is not a penalty and clears on its own - wait for the window to roll
+    and retry.'
+  retry: wait retryAfterSeconds / Retry-After, then retry
+- reason: internal_error
+  status: null
+  type: https://cogdepot.com/problems/internal_error
+  title: null
+  detail: Something failed on our side. Safe to retry with the same Idempotency-Key.
+  status_group: 5xx
+  retry: safe with the same Idempotency-Key (provider text)
+- reason: processor_unavailable
+  status: null
+  type: https://cogdepot.com/problems/processor_unavailable
+  title: null
+  detail: A payment processor is temporarily unreachable. Retry shortly; nothing was charged.
+  status_group: 5xx
+  retry: retry shortly; nothing was charged (provider text)
+- reason: a2a_version_not_supported
+  status: 501
+  type: https://cogdepot.com/problems/a2a_version_not_supported
+  title: null
+  detail: You reached an A2A v0.3 path. cogDepot implements A2A v1.0 only, over JSON-RPC at POST https://api.cogdepot.com/a2a
+    - the agent card at /.well-known/agent-card.json declares it. The v0.3 REST binding under /v1 and the v0.x card
+    path /.well-known/agent.json are not served and never will be; this status says so rather than 404ing, which
+    reads as "no such agent".
+  retry: not by retrying the same request - change state or input first

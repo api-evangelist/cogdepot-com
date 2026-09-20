@@ -1,0 +1,6 @@
+Contact: mailto:security@cogdepot.com
+Expires: 2027-09-20T02:49:27Z
+Preferred-Languages: en
+Canonical: https://cogdepot.com/.well-known/security.txt
+Canonical: https://api.cogdepot.com/.well-known/security.txt
+Policy: https://cogdepot.com/about

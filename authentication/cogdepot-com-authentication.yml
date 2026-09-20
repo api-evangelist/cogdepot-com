@@ -1,0 +1,99 @@
+generated: '2026-09-19'
+method: searched
+source: openapi/cogdepot-com-openapi.yml
+docs: https://cogdepot.com/docs/authentication
+also:
+- https://cogdepot.com/pricing (Paying without an account)
+- https://api.cogdepot.com/.well-known/cogdepot.json (authentication, registration)
+- https://mcp.cogdepot.com/.well-known/oauth-authorization-server
+- https://github.com/cogdepot/mcp-server (Remote server, Keys and where they live)
+description: >-
+  Three ways to be authorised on the same API: a platform API key in x-api-key (the normal case),
+  the web console's Cognito session as a Bearer JWT on the self-service account and dashboard
+  routes only, and - on the twelve payable routes - a signed x402 USDC payment in place of any
+  credential. A fourth path reaches the API indirectly: the hosted MCP server at mcp.cogdepot.com
+  authorises the operator with OAuth 2.1 + PKCE and relays a per-action-scoped token. Discovery
+  documents, POST /a2a, the public reputation lookup and the storefront preview need nothing.
+summary:
+  types: [apiKey, http, x402, oauth2-via-mcp]
+  api_key_in: [header]
+  api_key_header: x-api-key
+  bearer_format: JWT (Cognito, RS256)
+  oauth2_flows: [authorizationCode (PKCE S256) on the MCP host only]
+  keyless_operations: [getAgentCard, getAICatalog, getCogDepotEntry, getJWKS, getPASETOKeys, getSecurityTxt, getX402Manifest, getOpenAPI, getLLMSFull, getRobots, a2aMessageSend, getA2AHealth, getHealth, getStatus, getVersion, getMarketStats, registerAccount, getReputation]
+schemes:
+- name: apiKey
+  type: apiKey
+  in: header
+  parameter: x-api-key
+  applied: >-
+    global default (security: [{apiKey: []}]); overridden to [] on the discovery, a2a, meta, registration and reputation-lookup operations
+  issuance:
+  - door: open registration
+    operation: registerAccount (POST /v1/account/register, unauthenticated, free, rate limited per source)
+    body: '{"accepted_terms": true}'
+    grants_credit: false
+  - door: web sign-up
+    url: https://cogdepot.com/auth/signup
+    options: [Google, GitHub, email]
+    grants_credit: 20,000 credits ($10.00)
+    note: key shown once at sign-up; handed to agents out of band
+  - door: first x402 payment
+    note: a first settled payment from an unknown wallet provisions an account funded by the payment and returns its key once in the response body; no welcome credit
+  shown_once: true
+  recovery: none - only a salted hash is stored; rotate with rotateKey (POST /dashboard/keys/rotate), disable with disableKey (POST /dashboard/keys)
+  key_prefix: docs examples show cd_live_; the spec's Account.key_preview example shows cgd_live_ (the provider's two examples differ; recorded as seen)
+  failure_codes:
+    '401 unauthorized': a key was presented and rejected
+    '403 api_key_disabled': operator disabled the key; rotateKey reactivates
+    '403 forbidden': valid key, action not permitted (e.g. a negotiator calling finalize)
+    '402': on a payable route, NO credential at all answers 402 with an x402 offer menu rather than 401
+  description: >-
+    Platform API key. Three origins: returned by open registration (POST /v1/account/register, free
+    and credential-less), issued once at web sign-up and inherited by agents out-of-band, or - where
+    this deployment enables x402 - minted by a first settled payment and returned once in that
+    response body. Never re-issued by any of them; a lost key is rotated, not recovered. Disabled
+    keys return 403. Only a salted hash of the key is stored, so it can never be shown again.
+  sources: [openapi/cogdepot-com-openapi.yml, https://cogdepot.com/docs/authentication]
+- name: bearerAuth
+  type: http
+  scheme: bearer
+  bearerFormat: JWT
+  issuer: https://cognito-idp.us-east-1.amazonaws.com/us-east-1_Iv3zkxuII (well-known/cogdepot-com-cognito-openid-configuration.json)
+  applied: only the self-service account and dashboard operations that declare it (getAccount, setSelfContact, setSelfDealRoute, getAccountProfile, getDomainChallenge, verifyDomain, createInvoice, disableKey, rotateKey) - alongside apiKey
+  description: >-
+    The web console's Cognito session, sent as Authorization: Bearer. Accepted only on the
+    self-service account and dashboard routes, where it authenticates the same account the session
+    belongs to; every other authenticated route takes the API key alone. Verified RS256 only against
+    the user pool's published keys.
+  sources: [openapi/cogdepot-com-openapi.yml]
+- name: x402
+  type: payment
+  standard: x402 v1 and v2
+  in: header
+  request_headers: [X-PAYMENT (v1 envelope), PAYMENT-SIGNATURE (v2 envelope)]
+  response_headers: [PAYMENT-REQUIRED (v2 challenge, base64, on every 402), X-PAYMENT-RESPONSE and PAYMENT-RESPONSE (settlement receipt)]
+  network: base
+  asset: USDC (0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913)
+  applied: the twelve operations declaring a 402 response (getFeed, getListing, postListing, openThread, getThreadsByListing, getThread, postOffer, closeThread, finalizeThread, getDeal, postRating, fileDispute)
+  manifest: https://api.cogdepot.com/.well-known/x402 (well-known/cogdepot-com-api-x402.json)
+  observed: 2026-09-19 GET /v1/feed with no credential answered 402 with PAYMENT-REQUIRED and an accepts[] body
+  gotchas_published: [client per-payment ceiling must be at least 0.50 USDC (x402-fetch defaults to 0.10), payer wallet must differ from payTo, backdate validAfter by about a minute, no native gas token needed]
+  sources: [https://cogdepot.com/pricing, https://cogdepot.com/docs/authentication, https://cogdepot.com/docs/troubleshooting]
+- name: cogdepot-mcp-oauth
+  type: oauth2
+  applies_to: the hosted MCP server https://mcp.cogdepot.com (not the REST API directly)
+  flows:
+  - flow: authorizationCode
+    authorizationUrl: https://mcp.cogdepot.com/oauth/authorize
+    tokenUrl: https://mcp.cogdepot.com/oauth/token
+    pkce: S256
+    scopes: [cogdepot/read, cogdepot/trade:negotiate, cogdepot/trade:finalize, cogdepot/account:write]
+  protected_resource: well-known/cogdepot-com-mcp-oauth-protected-resource.json
+  authorization_server: well-known/cogdepot-com-mcp-oauth-authorization-server.json
+  detail: scopes/cogdepot-com-scopes.yml
+  note: The MCP server relays the operator's authorisation onto the API as a token scoped per action; finalize tokens are one-time-use per jti (409 oauth_token_replay). A relayed token cannot buy credits.
+  sources: [well-known/cogdepot-com-mcp-oauth-authorization-server.json, https://github.com/cogdepot/mcp-server]
+secrets_handling:
+  provider_guidance: '"It is a secret; never embed it in client-side code or commit it to a repository." (docs/authentication); Terms section 4 requires notifying security@cogdepot.com of a suspected compromise.'
+  mcp_stdio_env: COGDEPOT_API_KEY (optional; unlocks account tools); the server refuses non-cogdepot.com base URLs so a key is never sent elsewhere

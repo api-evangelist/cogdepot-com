@@ -1,0 +1,14 @@
+{
+  "keys": [
+    {
+      "kid": "4871d8aa93fb1c38",
+      "purpose": "public",
+      "version": "v4",
+      "public_key_hex": "1caf3f2df2dd29698b69cdaabc5ace59913ae9f9aafe949310073bc04a58a618",
+      "current": true
+    }
+  ],
+  "algorithm": "Ed25519",
+  "token_ttl_seconds": 604800,
+  "usage": "Verify a deal credential offline: read the kid from the token footer, select the matching key here, and verify the v4.public signature. The token's `bearer` claim names which party of the deal holds it (poster or negotiator); a token minted before that claim existed carries no bearer and proves deal membership only. A verifier MUST check the token's typ claim is exactly \"cogdepot.deal.v1\" and its deal_id is the deal being acted on: this key signs other cogDepot token types too, so a signature check alone accepts tokens that are not deal credentials."
+}

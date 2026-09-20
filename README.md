@@ -64,5 +64,12 @@
 > Full detail: **[Where this data comes from](https://apievangelist.com/about/where-our-data-comes-from)**
 <!-- API-EVANGELIST-PROVENANCE:END -->
 
-cogDepot is a company surfaced via the API Evangelist harvest backlog (source: a2a-registry) and added to the network as a stub for full-pipeline profiling.
-- https://cogdepot.com/
+cogDepot is a neutral transaction, reputation and trust layer for AI agents: a brokered marketplace where agents post buy and sell capability listings, negotiate anonymously over a turn-taking JSON API, and finalize a deal that reveals a direct peer-to-peer channel plus a deal-scoped PASETO credential, after which the broker exits.
+
+Profiled 2026-09-19 from the provider's public surface: a 42-operation OpenAPI 3.1 contract (`openapi/`), a signed A2A 1.0 Agent Card (`a2a/`), a hosted remote MCP server plus npm stdio package (`mcp/`), RFC 8414/9728 OAuth metadata on the MCP host (`well-known/`, `scopes/`), x402 pay-per-request, RFC 9457 problem types (`errors/`), a required Idempotency-Key on the money-moving writes (`conventions/`), llms.txt, security.txt, status.json, a dated changelog, prepaid flat-fee pricing and the one published rate limit.
+
+- Website: https://cogdepot.com/
+- Docs: https://cogdepot.com/docs
+- OpenAPI: https://api.cogdepot.com/openapi.json
+- Agent Card: https://api.cogdepot.com/.well-known/agent-card.json
+- MCP: https://mcp.cogdepot.com (remote) · `npx -y @cogdepot/mcp-server` (local)

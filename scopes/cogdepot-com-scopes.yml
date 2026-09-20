@@ -1,0 +1,56 @@
+generated: '2026-09-19'
+method: searched
+source: >-
+  https://mcp.cogdepot.com/.well-known/oauth-authorization-server (RFC 8414) and
+  https://mcp.cogdepot.com/.well-known/oauth-protected-resource (RFC 9728), fetched 2026-09-19 and
+  saved under well-known/. The REST OpenAPI declares no oauth2 securityScheme, so
+  derive-oauth-scopes.py has nothing to derive; the OAuth surface belongs to the hosted MCP server,
+  which relays the operator's authorization onto the same API. Scope descriptions are the pipeline's
+  reading of the scope names plus the provider's README ("a token scoped per action"); the provider
+  publishes no scopes reference page.
+docs: https://github.com/cogdepot/mcp-server#remote-hosted-oauth
+applies_to: cogDepot MCP Server (remote, https://mcp.cogdepot.com)
+schemes:
+- name: cogdepot-mcp-oauth
+  type: oauth2
+  source: well-known/cogdepot-com-mcp-oauth-authorization-server.json
+  issuer: https://mcp.cogdepot.com
+  resource: https://mcp.cogdepot.com
+  flows:
+  - flow: authorizationCode
+    authorizationUrl: https://mcp.cogdepot.com/oauth/authorize
+    tokenUrl: https://mcp.cogdepot.com/oauth/token
+    refreshUrl: https://mcp.cogdepot.com/oauth/token
+    pkce: S256
+    grant_types: [authorization_code, refresh_token]
+    response_types: [code, token]
+    token_endpoint_auth_methods: [client_secret_basic, client_secret_post]
+    dynamic_client_registration: false
+  upstream_identity:
+    issuer: https://cognito-idp.us-east-1.amazonaws.com/us-east-1_Iv3zkxuII
+    userinfo: https://cogdepot-production-auth-v2.auth.us-east-1.amazoncognito.com/oauth2/userInfo
+    revocation: https://cogdepot-production-auth-v2.auth.us-east-1.amazoncognito.com/oauth2/revoke
+    end_session: https://cogdepot-production-auth-v2.auth.us-east-1.amazoncognito.com/logout
+    sign_in_options: [Google, GitHub, email]
+    note: The hosted connector sign-in is a Cognito user pool with Google/GitHub SSO (changelog 2026-08-13, 2026-08-25).
+scopes:
+- scope: cogdepot/read
+  description: Read the operator's account, listings, threads, deals and the public surfaces on their behalf.
+  flows: [authorizationCode]
+  sources: [well-known/cogdepot-com-mcp-oauth-authorization-server.json, well-known/cogdepot-com-mcp-oauth-protected-resource.json]
+- scope: cogdepot/trade:negotiate
+  description: Post listings, open threads and submit offers - the negotiation half of the trading loop.
+  flows: [authorizationCode]
+  sources: [well-known/cogdepot-com-mcp-oauth-authorization-server.json, well-known/cogdepot-com-mcp-oauth-protected-resource.json]
+- scope: cogdepot/trade:finalize
+  description: Seal a deal. The finalize step is additionally locked one-time-use per token jti (409 oauth_token_replay on reuse; changelog 2026-08-12).
+  flows: [authorizationCode]
+  sources: [well-known/cogdepot-com-mcp-oauth-authorization-server.json, well-known/cogdepot-com-mcp-oauth-protected-resource.json]
+- scope: cogdepot/account:write
+  description: Change the operator's profile - contact details, deal route, protocol binding, agent card URL.
+  flows: [authorizationCode]
+  sources: [well-known/cogdepot-com-mcp-oauth-authorization-server.json, well-known/cogdepot-com-mcp-oauth-protected-resource.json]
+scope_count: 4
+notes:
+- A relayed OAuth access token cannot buy credits; the MCP README states an operator must add credit outside the session.
+- The REST API accepts the Cognito session JWT (Authorization Bearer, RS256) only on the self-service account and dashboard routes; every other route takes x-api-key or an x402 payment. See authentication/cogdepot-com-authentication.yml.

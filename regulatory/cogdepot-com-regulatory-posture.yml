@@ -1,0 +1,103 @@
+generated: '2026-09-19'
+method: searched
+probe: true
+harvest_only: true
+harvest_only_note: >-
+  This file records WHAT cogDepot publishes. It does not decide which regimes reach the operator -
+  that is the Kin Score regime map's job, not this artifact's.
+source: >-
+  Artifacts harvested this run (well-known/ security.txt, lifecycle/, conformance/), the legal pages
+  https://cogdepot.com/privacy (Last updated September 2026) and https://cogdepot.com/terms (Last
+  updated August 18, 2026), https://cogdepot.com/about, https://cogdepot.com/changelog, humans.txt,
+  and live probes of the conventional regulatory paths on cogdepot.com on 2026-09-19.
+summary: >-
+  Two signals carry substance: a data-subject-request route (rights enumerated under GDPR and
+  CCPA/CPRA, a dedicated privacy@cogdepot.com address, a 30-day answer commitment, controller
+  named, lawful bases stated) and a data-residency statement naming the storage region (AWS
+  us-east-1) with Standard Contractual Clauses for EEA/UK transfer. Nothing else on the list is
+  published: no SBOM, VPAT, subprocessor table, DPA, incident-notification SLA, GPC statement,
+  transparency report, age-assurance, notice-and-action route or exit-assistance doc. Every
+  conventional path 404s with the site's real 404 page (not a soft 200).
+signals:
+  data_subject_request:
+    present: true
+    url: https://cogdepot.com/privacy
+    mechanism: email
+    contact: privacy@cogdepot.com
+    response_time: '"We answer within 30 days."'
+    rights_stated: [access, correct, export, delete, object, restrict, withdraw consent, CCPA/CPRA know/delete/correct/opt-out]
+    statement: '"You have the right to access, correct, export, or delete the personal data we hold, to object to or restrict processing, and to withdraw consent where consent is the basis. ... Exercise any of these by emailing privacy@cogdepot.com from the address on the account. We answer within 30 days."'
+    regimes_named_by_provider: [GDPR (EEA/UK), CCPA/CPRA (California)]
+    controller: cogDepot (no separate Data Protection Officer - stated)
+    last_updated: 'September 2026'
+    limits_stated: deletion does not retract a sealed deal already revealed to the counterparty; records required for accounting or fraud survive in the narrowest form
+    note: Recorded because the page carries the substance (rights list, lawful bases, controller, address, response time), not merely the word. No self-service portal; /privacy/requests 404.
+  data_residency:
+    present: true
+    url: https://cogdepot.com/privacy
+    regions: [us]
+    region_detail: AWS us-east-1
+    selectable: false
+    statement: '"cogDepot is operated from, and stores data in, the United States (AWS us-east-1), apart from the reduced long-term copy of access logs described in §4, which is kept on our own self-hosted infrastructure. Using the service from the EEA or UK therefore involves an international transfer; we rely on the Standard Contractual Clauses for it."'
+    note: A disclosure of where data lives and the transfer mechanism, not a residency option a customer can choose. Recorded as the published fact; /docs/data-residency 404.
+probes:
+- {url: https://cogdepot.com/accessibility, status: 404}
+- {url: https://cogdepot.com/accessibility/vpat, status: 404}
+- {url: https://cogdepot.com/legal/subprocessors, status: 404}
+- {url: https://cogdepot.com/legal/dpa, status: 404}
+- {url: https://cogdepot.com/privacy/requests, status: 404}
+- {url: https://cogdepot.com/transparency, status: 404}
+- {url: https://cogdepot.com/security, status: 404}
+- {url: https://cogdepot.com/security/sbom, status: 404}
+- {url: https://cogdepot.com/docs/data-residency, status: 404}
+- {url: https://cogdepot.com/ai, status: 404}
+- {url: https://cogdepot.com/ai/transparency, status: 404}
+- {url: https://cogdepot.com/legal/report-content, status: 404}
+- {url: https://cogdepot.com/privacy, status: 200}
+- {url: https://cogdepot.com/terms, status: 200}
+- {url: https://cogdepot.com/about, status: 200}
+- {url: https://cogdepot.com/.well-known/security.txt, status: 200}
+absent:
+- sbom
+- support_lifetime
+- accessibility_conformance
+- training_data_summary
+- ai_transparency
+- global_privacy_control
+- subprocessors
+- incident_notification
+- age_assurance
+- notice_and_action
+- transparency_report
+- exit_assistance
+prose_statements_not_recorded_as_signals:
+- page: https://cogdepot.com/privacy
+  topic: global_privacy_control
+  verbatim: '"we sell and share no personal information, so there is nothing to opt out of."'
+  why_not: A statement that no sale or sharing occurs is not a statement that the Sec-GPC signal is honoured; per the contract GPC is set only from a published honouring statement, and none exists.
+- page: https://cogdepot.com/privacy
+  topic: subprocessors
+  verbatim: '"stores data in, the United States (AWS us-east-1)" ... "we rely on the Standard Contractual Clauses"'
+  why_not: AWS is named as infrastructure in prose; there is no dated subprocessor table and no DPA.
+- page: https://cogdepot.com/changelog
+  topic: accessibility_conformance
+  verbatim: '"Accessibility is measured in CI now, and the 22 nodes that first run flagged were fixed." (2026-08-23); contrast remediation to a 4.5:1 standard (2026-09-01)'
+  why_not: A statement of engineering practice, not a conformance report or VPAT against a named standard.
+- page: https://cogdepot.com/writing/who-says-they-are-a-robot
+  topic: ai_transparency
+  verbatim: 'Essay - "The EU AI Act asks AI to identify itself. I checked 30 years of that experiment on my server."'
+  why_not: An essay about Article 50, not a disclosure of the provider's own AI system behaviour.
+- page: https://cogdepot.com/privacy
+  topic: exit_assistance
+  verbatim: '"Keep your own copy of anything you need beyond that window."'
+  why_not: A retention warning plus the DSR export right; not a cloud-switching or exit-assistance procedure.
+- page: https://cogdepot.com/terms
+  topic: notice_and_action
+  verbatim: 'Section 10 Acceptable use policy enumerates prohibited content and services.'
+  why_not: A prohibition list; no route for a third party to report content and no action commitment is published.
+retention_statement: '"Account and metering records are retained while your account is active and for as long as required to meet legal and accounting obligations. Marketplace content is retained on a fixed schedule rather than indefinitely. Listings, ratings, and closed negotiation threads are purged 7 days after they reach their terminal state." (privacy policy section 4); server access logs "kept in full for up to 90 days" then a pseudonymous long-term copy indefinitely.'
+security_contact:
+  security_txt: well-known/cogdepot-com-security.txt
+  contact: security@cogdepot.com
+  policy: https://cogdepot.com/about
+  detail: security/cogdepot-com-vulnerability-disclosure.yml

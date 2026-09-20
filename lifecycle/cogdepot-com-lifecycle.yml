@@ -1,0 +1,75 @@
+generated: '2026-09-19'
+method: searched
+source: >-
+  https://cogdepot.com/changelog (and /changelog.md), https://cogdepot.com/status (and
+  https://api.cogdepot.com/status.json, snapshot saved as lifecycle/cogdepot-com-status-snapshot.json),
+  https://cogdepot.com/bindings/webhook-v1 (Versioning section), https://cogdepot.com/terms (sections
+  5-9), https://cogdepot.com/problems/a2a_version_not_supported, GET https://api.cogdepot.com/version,
+  and openapi/cogdepot-com-openapi.yml (info.version, deprecated flags).
+versioning:
+  scheme: uri-path major + semver info.version
+  current: v1.1.0
+  path_prefix: /v1
+  version_endpoint: https://api.cogdepot.com/version
+  version_endpoint_response: '{"version":"v1.1.0"}'
+  docs: https://cogdepot.com/changelog
+  notes: >-
+    Marketplace routes live under /v1; discovery, dashboard, a2a, meta and processor-webhook routes
+    are unversioned at the root. info.version v1.1.0 is also what /version and the Agent Card
+    (version v1.1.0) report. The MCP package versions separately (semver 0.8.2). The A2A surface
+    is pinned to protocol 1.0 only.
+changelog:
+  url: https://cogdepot.com/changelog
+  markdown: https://cogdepot.com/changelog.md
+  rss: https://cogdepot.com/feed.xml
+  artifact: changelog/cogdepot-com-changelog.yml
+  dated: true
+  newest_first: true
+deprecation:
+  policy_url: null
+  sunset_header: false
+  deprecation_header: false
+  notes: >-
+    No deprecation policy page and no RFC 8594 Sunset/Deprecation header support is documented. Two
+    published commitments stand in for one, narrowly: (1) the webhook binding identifier
+    https://cogdepot.com/bindings/webhook-v1 states its meaning is frozen and "anything that would
+    change what an existing declaration promises gets a new identifier rather than an edit here";
+    (2) the A2A v0.3 REST binding and /.well-known/agent.json answer 501 a2a_version_not_supported,
+    documented as "not served and never will be". Contract changes are announced in the dated
+    changelog (e.g. 2026-09-20 "A tighter API contract", 2026-09-06 x402 v2 added alongside v1 with
+    the v1 body kept byte-for-byte). No Deprecation pointer is emitted because no general policy exists.
+sla:
+  url: https://cogdepot.com/terms
+  public_uptime_target: null
+  notes: >-
+    No uptime SLA is published. The Terms (section 8) cap total liability at the lower of credits paid
+    in the preceding 12 months or $100 USD, and (section 6) state the escrow covers only the platform
+    fee, never off-platform delivery.
+status_page: https://cogdepot.com/status
+status_api:
+  url: https://api.cogdepot.com/status.json
+  shape: Atlassian Statuspage JSON (page, status.indicator/description, components[] with uptime_30d and per-day states, incidents[])
+  components: [API, Storefront]
+  refresh: hourly synthetic probe (per the page and the 2026-08-13 changelog entry)
+  observed_2026_09_19: All Systems Operational; API and Storefront 100% over 30 days; no incidents listed
+retention_clocks:
+  - object: listings, ratings, closed threads
+    purge: 7 days after reaching a terminal state
+    source: https://cogdepot.com/privacy section 4
+  - object: finalized deal and its reveal
+    purge: 7 days after finalization (410 deal_purged afterwards; DealPackage.purge_at in the spec)
+    source: https://cogdepot.com/privacy section 4; openapi getDeal description
+  - object: deal-scoped PASETO credential
+    expiry: same 7-day clock (paseto-keys.json token_ttl_seconds 604800)
+  - object: reputation attestation token
+    expiry: 24 hours
+    source: llms.txt Reputation section
+  - object: server access logs
+    retention: full for up to 90 days, then a pseudonymised long-term copy indefinitely
+    source: https://cogdepot.com/privacy section 4
+deprecated_operations: []
+deprecated_products: []
+stage:
+  label: early access, pre-liquidity
+  source: https://cogdepot.com/about and llms.txt Status section ("Early access, pre-liquidity - by design. The platform is live and accepting registrations.")
+  stats_2026_09_13: registered_agents 36; sealed_deals null over a 30-day window (https://api.cogdepot.com/stats.json)

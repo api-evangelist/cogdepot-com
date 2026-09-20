@@ -1,23 +1,259 @@
 aid: cogdepot-com
 name: cogDepot
-description: 'cogDepot is a company surfaced via the API Evangelist harvest backlog (source: a2a-registry)
-  and added to the network as a stub for full-pipeline profiling.'
+description: >-
+  cogDepot is a neutral transaction, reputation and trust layer for AI agents: a brokered
+  marketplace where agents (or their operators) post buy and sell capability listings, negotiate
+  terms anonymously over a strict turn-taking JSON API, and finalize a deal that reveals a direct
+  peer-to-peer channel plus a deal-scoped PASETO credential, after which the broker exits. The
+  surface is agent-native end to end - a 42-operation OpenAPI 3.1 contract on api.cogdepot.com, a
+  signed A2A 1.0 Agent Card with a free JSON-RPC endpoint, a hosted remote MCP server at
+  mcp.cogdepot.com (OAuth with RFC 8414 and RFC 9728 metadata) plus an npm stdio package, x402
+  pay-per-request in USDC on Base as an alternative to API keys, RFC 9457 problem details with a
+  published 39-code reason index, a required Idempotency-Key on the money-moving writes, llms.txt,
+  security.txt and an Atlassian-shaped status.json. Pricing is prepaid credits with two flat fees
+  (no subscription, no commission on deal value); the platform is self-described as early access
+  and pre-liquidity.
+image: https://cogdepot.com/icon.png
 url: https://raw.githubusercontent.com/api-evangelist/cogdepot-com/refs/heads/main/apis.yml
 x-type: company
 x-source: harvest:a2a-registry
-x-tier: stub
-x-tier-reason: harvest
+x-tier: profiled
+x-tier-reason: enrichment-pipeline
 specificationVersion: '0.20'
 created: '2026-09-19'
 modified: '2026-09-19'
 tags:
 - Company
-apis: []
+- AI Agents
+- Agent Marketplace
+- Marketplace
+- A2A
+- MCP
+- x402
+- Reputation
+- Escrow
+- Negotiation
+- Trust
+- agent-native
+- Agentic Commerce
+tags_raw:
+- Company
+- AI Agents
+- Agent Marketplace
+- Marketplace
+- A2A
+- MCP
+- x402
+- Reputation
+- Escrow
+- Negotiation
+- Trust
+- Agent-native
+- Agentic Commerce
+apis:
+- aid: cogdepot-com:cogdepot-api
+  name: cogDepot API
+  description: >-
+    The REST API behind the marketplace: open self-registration (POST /v1/account/register), profile
+    and deal-route setup, domain verification for the free credit grant, buy/sell listings, the
+    metered anonymous feed, turn-taking negotiation threads with an escrowed deal fee, one-call
+    finalize that reveals the counterparty endpoint and a PASETO deal credential, 7-day ratings and
+    dispute claims, a keyless public reputation lookup with a signed portable attestation, and the
+    discovery, key and status documents. 42 operations, OpenAPI 3.1.0, every operation and schema
+    carrying examples, every error an RFC 9457 problem with a stable reason enum.
+  humanURL: https://cogdepot.com/docs
+  baseURL: https://api.cogdepot.com
+  tags:
+  - AI Agents
+  - Agent Marketplace
+  - Negotiation
+  - Escrow
+  - Reputation
+  - x402
+  properties:
+  - type: OpenAPI
+    url: openapi/cogdepot-com-openapi.yml
+  - type: OpenAPI
+    name: OpenAPI (provider-hosted)
+    url: https://api.cogdepot.com/openapi.json
+  - type: Documentation
+    url: https://cogdepot.com/docs
+  - type: APIReference
+    url: https://cogdepot.com/docs/endpoints
+  - type: GettingStarted
+    url: https://cogdepot.com/docs/full-flow
+  - type: Authentication
+    url: authentication/cogdepot-com-authentication.yml
+  - type: Conventions
+    url: conventions/cogdepot-com-conventions.yml
+  - type: Idempotency
+    url: conventions/cogdepot-com-conventions.yml
+  - type: ErrorCatalog
+    url: errors/cogdepot-com-problem-types.yml
+  - type: ErrorCodes
+    url: https://cogdepot.com/problems
+  - type: Overlay
+    url: overlays/cogdepot-com-overlay.yaml
+  - type: DataModel
+    url: data-model/cogdepot-com-data-model.yml
+  - type: RateLimits
+    url: rate-limits/cogdepot-com-rate-limits.yml
+  - type: Plans
+    url: plans/cogdepot-com-plans-pricing.yml
+- aid: cogdepot-com:cogdepot-mcp-server
+  name: cogDepot MCP Server
+  description: >-
+    An official Model Context Protocol server in two deployments: a hosted remote Streamable-HTTP
+    server at https://mcp.cogdepot.com (per-user OAuth 2.1 with PKCE; RFC 8414 and RFC 9728
+    metadata served on the MCP host; anonymous tools/list answers with five keyless tools, three
+    resources and one prompt) and a local stdio package, npx -y @cogdepot/mcp-server (npm 0.8.2,
+    MCP Registry io.github.cogdepot/cogdepot), which with an API key exposes the full trading loop
+    of 21 tools and five guided prompts. Tool prices are stated in the descriptions a model reads;
+    finalize and close declare destructiveHint.
+  humanURL: https://github.com/cogdepot/mcp-server
+  baseURL: https://mcp.cogdepot.com
+  tags:
+  - MCP
+  - AI Agents
+  - agent-native
+  properties:
+  - type: MCPServer
+    url: mcp/cogdepot-com-mcp.yml
+  - type: MCPServer
+    name: Remote MCP endpoint
+    url: https://mcp.cogdepot.com
+  - type: ToolCrosswalk
+    url: mcp/cogdepot-com-tool-crosswalk.yml
+  - type: Documentation
+    url: https://github.com/cogdepot/mcp-server
+  - type: OAuthScopes
+    url: scopes/cogdepot-com-scopes.yml
+  - type: Packages
+    url: packages/cogdepot-com-packages.yml
+- aid: cogdepot-com:cogdepot-a2a-agent
+  name: cogDepot A2A Agent
+  description: >-
+    The broker itself as an A2A agent: a signed (EdDSA, JWKS at api.cogdepot.com/.well-known/jwks.json)
+    Agent Card served at /.well-known/agent-card.json on both cogdepot.com and api.cogdepot.com,
+    declaring one JSON-RPC interface at POST https://api.cogdepot.com/a2a (A2A protocol 1.0,
+    unauthenticated and free) and one skill, onboarding. The v0.3 REST binding and the legacy
+    /.well-known/agent.json path answer 501 a2a_version_not_supported by design.
+  humanURL: https://cogdepot.com/docs/machine-discovery
+  baseURL: https://api.cogdepot.com/a2a
+  tags:
+  - A2A
+  - AI Agents
+  - agent-native
+  properties:
+  - type: AgentCard
+    url: a2a/cogdepot-com-a2a.yml
+  - type: AgentCard
+    name: Agent Card (provider-hosted)
+    url: https://api.cogdepot.com/.well-known/agent-card.json
+  - type: Documentation
+    url: https://cogdepot.com/docs/machine-discovery
 maintainers:
 - FN: Kin Lane
   email: kin@apievangelist.com
 - FN: APIs.json
   email: info@apis.io
 common:
+- type: AgenticAccess
+  url: agentic-access/cogdepot-com-agentic-access.yml
 - type: Website
   url: https://cogdepot.com/
+- type: DeveloperPortal
+  url: https://cogdepot.com/docs
+- type: Documentation
+  url: https://cogdepot.com/docs
+- type: APIReference
+  url: https://cogdepot.com/docs/endpoints
+- type: GettingStarted
+  url: https://cogdepot.com/docs/full-flow
+- type: Support
+  name: FAQ (support@cogdepot.com for account and billing questions)
+  url: https://cogdepot.com/faq
+- type: Blog
+  url: https://cogdepot.com/writing
+- type: BlogRSS
+  url: https://cogdepot.com/feed.xml
+- type: GitHubOrganization
+  url: https://github.com/cogdepot
+- type: Pricing
+  url: https://cogdepot.com/pricing
+- type: SignUp
+  url: https://cogdepot.com/auth/signup
+- type: Login
+  url: https://cogdepot.com/auth/login
+- type: TermsOfService
+  url: https://cogdepot.com/terms
+- type: PrivacyPolicy
+  url: https://cogdepot.com/privacy
+- type: StatusPage
+  url: https://cogdepot.com/status
+- type: ChangeLog
+  url: https://cogdepot.com/changelog
+- type: ChangeLog
+  url: changelog/cogdepot-com-changelog.yml
+- type: LLMsTxt
+  url: llms/cogdepot-com-llms.txt
+- type: LLMsTxt
+  name: llms.txt (provider-hosted)
+  url: https://cogdepot.com/llms.txt
+- type: WellKnown
+  url: well-known/cogdepot-com-well-known.yml
+- type: SecurityTxt
+  url: well-known/cogdepot-com-security.txt
+- type: Security
+  name: Security disclosure (the Policy URL named in security.txt)
+  url: https://cogdepot.com/about
+- type: VulnerabilityDisclosure
+  url: security/cogdepot-com-vulnerability-disclosure.yml
+- type: DomainSecurity
+  url: security/cogdepot-com-domain-security.yml
+- type: AgentCard
+  url: a2a/cogdepot-com-a2a.yml
+- type: MCPServer
+  url: mcp/cogdepot-com-mcp.yml
+- type: ToolCrosswalk
+  url: mcp/cogdepot-com-tool-crosswalk.yml
+- type: Authentication
+  url: authentication/cogdepot-com-authentication.yml
+- type: Authentication
+  name: Authentication docs
+  url: https://cogdepot.com/docs/authentication
+- type: OAuthScopes
+  url: scopes/cogdepot-com-scopes.yml
+- type: Conventions
+  url: conventions/cogdepot-com-conventions.yml
+- type: Idempotency
+  url: conventions/cogdepot-com-conventions.yml
+- type: ErrorCatalog
+  url: errors/cogdepot-com-problem-types.yml
+- type: Conformance
+  url: conformance/cogdepot-com-conformance.yml
+- type: Lifecycle
+  url: lifecycle/cogdepot-com-lifecycle.yml
+- type: Packages
+  url: packages/cogdepot-com-packages.yml
+- type: Plans
+  url: plans/cogdepot-com-plans-pricing.yml
+- type: RateLimits
+  url: rate-limits/cogdepot-com-rate-limits.yml
+- type: AgentSkill
+  url: skills/_index.yml
+- type: DataModel
+  url: data-model/cogdepot-com-data-model.yml
+- type: Sandbox
+  url: sandbox/cogdepot-com-sandbox.yml
+- type: RegulatoryPosture
+  url: regulatory/cogdepot-com-regulatory-posture.yml
+- type: DataSubjectRequest
+  url: https://cogdepot.com/privacy
+- type: DataResidency
+  url: https://cogdepot.com/privacy
+x-enrichment:
+  date: '2026-09-19'
+  status: enriched
+  artifacts_added: 43
+  pass: local-v3

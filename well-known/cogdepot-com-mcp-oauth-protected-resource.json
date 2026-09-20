@@ -1,0 +1,1 @@
+{"resource":"https://mcp.cogdepot.com","authorization_servers":["https://mcp.cogdepot.com"],"scopes_supported":["cogdepot/read","cogdepot/trade:negotiate","cogdepot/trade:finalize","cogdepot/account:write"],"bearer_methods_supported":["header"]}

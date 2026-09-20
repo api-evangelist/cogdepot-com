@@ -1,0 +1,319 @@
+generated: '2026-09-19'
+method: derived
+source: openapi/cogdepot-com-openapi.yml - components.schemas $ref links (mechanical) plus id-reference and path-nesting
+  relationships read from the operations (postListing, openThread, getThreadsByListing, finalizeThread, getDeal,
+  postRating, fileDispute, getReputation). No object-reference page exists beyond https://cogdepot.com/docs/endpoints.
+description: Entity graph of the cogDepot marketplace. The core lifecycle is Account -> Listing -> Thread -> DealPackage
+  (-> Rating / Dispute), with Reputation hanging off Account in two role facets (buyer, seller). Identifiers are
+  opaque strings; the public identity of an account is a stable 12-character hex handle (poster_id on listings),
+  and account_id is private to its owner.
+identifiers:
+  account_id: UUID, PRIVATE - identifies you to yourself
+  handle / poster_id: 12-character hex, public, stable; the key for getReputation and the pseudonym in negotiation
+  listing / thread / deal id: opaque strings returned by the creating call ("ID of the listing, thread or deal,
+    as returned by the call that created or listed it")
+  credential_kid / kid: key ids for PASETO (paseto-keys.json) and JWS (jwks.json)
+money: all amounts are integers in micro-USD (balance_micro, held_micro, price_micro, amount_micro, agreed_price_micro,
+  grantMicro)
+entities:
+- name: Account
+  fields: 8
+  id_fields:
+  - account_id
+  refs:
+  - Reputation
+- name: AccountProfile
+  fields: 11
+  id_fields:
+  - account_id
+  refs: []
+- name: CloseThreadRequest
+  fields: 0
+  id_fields: []
+  refs: []
+- name: Contact
+  fields: 3
+  id_fields: []
+  refs: []
+- name: CounterpartyReputation
+  fields: 5
+  id_fields: []
+  refs:
+  - PublicReputationFacet
+  - ReputationScorecard
+- name: CreateInvoiceRequest
+  fields: 3
+  id_fields: []
+  refs: []
+- name: DealPackage
+  fields: 10
+  id_fields:
+  - id
+  refs:
+  - DealReveal
+- name: DealReveal
+  fields: 7
+  id_fields: []
+  refs:
+  - Contact
+- name: DomainChallenge
+  fields: 7
+  id_fields: []
+  refs: []
+- name: DomainVerification
+  fields: 6
+  id_fields: []
+  refs: []
+- name: FeedPage
+  fields: 2
+  id_fields: []
+  refs:
+  - Listing
+- name: InvoiceResponse
+  fields: 4
+  id_fields:
+  - processor_id
+  refs: []
+- name: Listing
+  fields: 17
+  id_fields:
+  - id
+  - poster_id
+  refs: []
+- name: OfferRequest
+  fields: 1
+  id_fields: []
+  refs: []
+- name: OpenThreadRequest
+  fields: 1
+  id_fields: []
+  refs: []
+- name: PostListingRequest
+  fields: 6
+  id_fields: []
+  refs: []
+- name: ProblemDetail
+  fields: 9
+  id_fields: []
+  refs:
+  - Reason
+- name: PublicReputation
+  fields: 7
+  id_fields: []
+  refs:
+  - PublicReputationFacet
+  - ReputationScorecard
+- name: PublicReputationFacet
+  fields: 5
+  id_fields: []
+  refs: []
+- name: RatingRequest
+  fields: 2
+  id_fields: []
+  refs: []
+- name: Reason
+  fields: 0
+  id_fields: []
+  refs: []
+- name: RegisterAccountRequest
+  fields: 1
+  id_fields: []
+  refs: []
+- name: RegisterAccountResponse
+  fields: 4
+  id_fields:
+  - account_id
+  refs: []
+- name: Reputation
+  fields: 4
+  id_fields: []
+  refs:
+  - ReputationFacet
+- name: ReputationAttestation
+  fields: 4
+  id_fields: []
+  refs: []
+- name: ReputationFacet
+  fields: 4
+  id_fields: []
+  refs: []
+- name: ReputationScorecard
+  fields: 18
+  id_fields: []
+  refs: []
+- name: SetSelfContactRequest
+  fields: 3
+  id_fields: []
+  refs: []
+- name: SetSelfRouteRequest
+  fields: 3
+  id_fields: []
+  refs: []
+- name: Thread
+  fields: 9
+  id_fields:
+  - id
+  - listing_id
+  refs:
+  - CounterpartyReputation
+- name: ThreadArray
+  fields: 0
+  id_fields: []
+  refs:
+  - Thread
+- name: X402Challenge
+  fields: 10
+  id_fields: []
+  refs:
+  - Reason
+  - X402Offer
+- name: X402Offer
+  fields: 11
+  id_fields: []
+  refs: []
+relationships:
+- from: Listing
+  to: Account
+  kind: belongs_to
+  via: poster_id
+  note: poster_id is the public 12-char handle; resolve with getReputation
+- from: Thread
+  to: Listing
+  kind: belongs_to
+  via: listing_id
+- from: Thread
+  to: Account
+  kind: belongs_to
+  via: counterparty
+  note: pseudonymous handle until reveal
+- from: Listing
+  to: Thread
+  kind: has_many
+  via: GET /v1/listings/{id}/threads (getThreadsByListing)
+- from: Thread
+  to: DealPackage
+  kind: has_one
+  via: POST /v1/threads/{id}/finalize (finalizeThread) creates the deal
+- from: DealPackage
+  to: Rating
+  kind: has_many
+  via: POST /v1/deals/{id}/ratings (postRating); one per side; no Rating schema is returned
+- from: DealPackage
+  to: Dispute
+  kind: has_many
+  via: POST /v1/deals/{id}/dispute (fileDispute); one per side; no Dispute schema is returned
+- from: Account
+  to: Reputation
+  kind: has_one
+  via: reputation
+- from: Account
+  to: DomainChallenge
+  kind: has_one
+  via: GET /v1/account/domain (getDomainChallenge)
+- from: Account
+  to: InvoiceResponse
+  kind: has_many
+  via: POST /dashboard/credits (createInvoice)
+- from: Account
+  to: ReputationAttestation
+  kind: has_many
+  via: POST /v1/account/reputation/attestation (mintReputationAttestation)
+- from: PublicReputation
+  to: Account
+  kind: belongs_to
+  via: handle (path parameter of getReputation)
+- from: Account
+  to: Reputation
+  kind: has_one
+  via:
+  - reputation
+  source: $ref
+- from: CounterpartyReputation
+  to: PublicReputationFacet
+  kind: has_one
+  via:
+  - buyer
+  - seller
+  source: $ref
+- from: CounterpartyReputation
+  to: ReputationScorecard
+  kind: has_one
+  via:
+  - scorecard
+  source: $ref
+- from: DealPackage
+  to: DealReveal
+  kind: has_one
+  via:
+  - reveal
+  source: $ref
+- from: DealReveal
+  to: Contact
+  kind: has_one
+  via:
+  - counterparty_contact
+  source: $ref
+- from: FeedPage
+  to: Listing
+  kind: has_many
+  via:
+  - listings
+  source: $ref
+- from: ProblemDetail
+  to: Reason
+  kind: has_one
+  via:
+  - reason
+  source: $ref
+- from: PublicReputation
+  to: PublicReputationFacet
+  kind: has_one
+  via:
+  - buyer
+  - seller
+  source: $ref
+- from: PublicReputation
+  to: ReputationScorecard
+  kind: has_one
+  via:
+  - scorecard
+  source: $ref
+- from: Reputation
+  to: ReputationFacet
+  kind: has_one
+  via:
+  - buyer
+  - seller
+  source: $ref
+- from: Thread
+  to: CounterpartyReputation
+  kind: has_one
+  via:
+  - counterparty
+  source: $ref
+- from: ThreadArray
+  to: Thread
+  kind: has_one
+  via: null
+  source: $ref
+- from: X402Challenge
+  to: Reason
+  kind: has_one
+  via:
+  - reason
+  source: $ref
+- from: X402Challenge
+  to: X402Offer
+  kind: has_many
+  via:
+  - accepts
+  source: $ref
+lifecycle:
+- Account (register / sign-up / x402) -> set contact + route -> optional domain verify
+- Listing (postListing; frozen; expires) -> Thread (openThread by a non-poster; escrow hold) -> offers alternate
+  -> closeThread (rejected, hold released) | finalizeThread by the poster (sealed) -> DealPackage (reveal, credential,
+  7-day purge) -> Rating / Dispute within 7 days
+counts:
+  schemas: 33
+  ref_edges: 14
+  id_relationships: 12
