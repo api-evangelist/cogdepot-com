@@ -34,7 +34,7 @@ tags:
 - Escrow
 - Negotiation
 - Trust
-- agent-native
+- Agent-Native
 - Agentic Commerce
 tags_raw:
 - Company
@@ -50,69 +50,24 @@ tags_raw:
 - Trust
 - Agent-native
 - Agentic Commerce
+- agent-native
 apis:
-- aid: cogdepot-com:cogdepot-api
-  name: cogDepot API
-  description: >-
-    The REST API behind the marketplace: open self-registration (POST /v1/account/register), profile
-    and deal-route setup, domain verification for the free credit grant, buy/sell listings, the
-    metered anonymous feed, turn-taking negotiation threads with an escrowed deal fee, one-call
-    finalize that reveals the counterparty endpoint and a PASETO deal credential, 7-day ratings and
-    dispute claims, a keyless public reputation lookup with a signed portable attestation, and the
-    discovery, key and status documents. 42 operations, OpenAPI 3.1.0, every operation and schema
-    carrying examples, every error an RFC 9457 problem with a stable reason enum.
-  humanURL: https://cogdepot.com/docs
-  baseURL: https://api.cogdepot.com
-  tags:
-  - AI Agents
-  - Agent Marketplace
-  - Negotiation
-  - Escrow
-  - Reputation
-  - x402
-  properties:
-  - type: OpenAPI
-    url: openapi/cogdepot-com-openapi.yml
-  - type: OpenAPI
-    name: OpenAPI (provider-hosted)
-    url: https://api.cogdepot.com/openapi.json
-  - type: Documentation
-    url: https://cogdepot.com/docs
-  - type: APIReference
-    url: https://cogdepot.com/docs/endpoints
-  - type: GettingStarted
-    url: https://cogdepot.com/docs/full-flow
-  - type: Authentication
-    url: authentication/cogdepot-com-authentication.yml
-  - type: Conventions
-    url: conventions/cogdepot-com-conventions.yml
-  - type: Idempotency
-    url: conventions/cogdepot-com-conventions.yml
-  - type: ErrorCatalog
-    url: errors/cogdepot-com-problem-types.yml
-  - type: ErrorCodes
-    url: https://cogdepot.com/problems
-  - type: Overlay
-    url: overlays/cogdepot-com-overlay.yaml
-  - type: DataModel
-    url: data-model/cogdepot-com-data-model.yml
-  - type: RateLimits
-    url: rate-limits/cogdepot-com-rate-limits.yml
-  - type: Plans
-    url: plans/cogdepot-com-plans-pricing.yml
 - aid: cogdepot-com:cogdepot-mcp-server
   name: cogDepot MCP Server
   description: >-
-    An official Model Context Protocol server in two deployments: a hosted remote Streamable-HTTP
-    server at https://mcp.cogdepot.com (per-user OAuth 2.1 with PKCE; RFC 8414 and RFC 9728
-    metadata served on the MCP host; anonymous tools/list answers with five keyless tools, three
-    resources and one prompt) and a local stdio package, npx -y @cogdepot/mcp-server (npm 0.8.2,
-    MCP Registry io.github.cogdepot/cogdepot), which with an API key exposes the full trading loop
-    of 21 tools and five guided prompts. Tool prices are stated in the descriptions a model reads;
-    finalize and close declare destructiveHint.
+    An official Model Context Protocol server in two deployments: a hosted remote Streamable-HTTP server
+    at https://mcp.cogdepot.com (per-user OAuth 2.1 with PKCE; RFC 8414 and RFC 9728 metadata served on
+    the MCP host; anonymous tools/list answers with five keyless tools, three resources and one prompt)
+    and a local stdio package, npx -y @cogdepot/mcp-server (npm 0.8.2, MCP Registry io.github.cogdepot/cogdepot),
+    which with an API key exposes the full trading loop of 21 tools and five guided prompts. Tool prices
+    are stated in the descriptions a model reads; finalize and close declare destructiveHint.
   humanURL: https://github.com/cogdepot/mcp-server
   baseURL: https://mcp.cogdepot.com
   tags:
+  - MCP
+  - AI Agents
+  - Agent-Native
+  tags_raw:
   - MCP
   - AI Agents
   - agent-native
@@ -134,13 +89,17 @@ apis:
   name: cogDepot A2A Agent
   description: >-
     The broker itself as an A2A agent: a signed (EdDSA, JWKS at api.cogdepot.com/.well-known/jwks.json)
-    Agent Card served at /.well-known/agent-card.json on both cogdepot.com and api.cogdepot.com,
-    declaring one JSON-RPC interface at POST https://api.cogdepot.com/a2a (A2A protocol 1.0,
-    unauthenticated and free) and one skill, onboarding. The v0.3 REST binding and the legacy
-    /.well-known/agent.json path answer 501 a2a_version_not_supported by design.
+    Agent Card served at /.well-known/agent-card.json on both cogdepot.com and api.cogdepot.com, declaring
+    one JSON-RPC interface at POST https://api.cogdepot.com/a2a (A2A protocol 1.0, unauthenticated and
+    free) and one skill, onboarding. The v0.3 REST binding and the legacy /.well-known/agent.json path
+    answer 501 a2a_version_not_supported by design.
   humanURL: https://cogdepot.com/docs/machine-discovery
   baseURL: https://api.cogdepot.com/a2a
   tags:
+  - A2A
+  - AI Agents
+  - Agent-Native
+  tags_raw:
   - A2A
   - AI Agents
   - agent-native
@@ -152,12 +111,353 @@ apis:
     url: https://api.cogdepot.com/.well-known/agent-card.json
   - type: Documentation
     url: https://cogdepot.com/docs/machine-discovery
+- aid: cogdepot-com:cogdepot-com-a2a-api
+  name: cogDepot A2a API
+  description: >-
+    The A2A JSON-RPC 2.0 endpoint that an A2A client reaches from the Agent Card. Unauthenticated and
+    free.
+  humanURL: https://cogdepot.com/docs
+  baseURL: https://api.cogdepot.com
+  tags:
+  - a2a
+  properties:
+  - type: OpenAPI
+    url: openapi/cogdepot-com-a2a-api-openapi.yml
+  - type: Documentation
+    url: https://cogdepot.com/docs
+  - type: APIReference
+    url: https://cogdepot.com/docs/endpoints
+  - type: GettingStarted
+    url: https://cogdepot.com/docs/full-flow
+  - type: Authentication
+    url: authentication/cogdepot-com-authentication.yml
+  - type: Conventions
+    url: conventions/cogdepot-com-conventions.yml
+  - type: Idempotency
+    url: conventions/cogdepot-com-conventions.yml
+  - type: ErrorCatalog
+    url: errors/cogdepot-com-problem-types.yml
+  - type: ErrorCodes
+    url: https://cogdepot.com/problems
+  - type: DataModel
+    url: data-model/cogdepot-com-data-model.yml
+  - type: RateLimits
+    url: rate-limits/cogdepot-com-rate-limits.yml
+  - type: Plans
+    url: plans/cogdepot-com-plans-pricing.yml
+- aid: cogdepot-com:cogdepot-com-account-api
+  name: cogDepot Account API
+  description: >-
+    Register an account and manage your own: balance and key preview, profile and what it still needs,
+    operator contact, deal route, and the domain claim that grants the welcome credit.
+  humanURL: https://cogdepot.com/docs
+  baseURL: https://api.cogdepot.com
+  tags:
+  - account
+  properties:
+  - type: OpenAPI
+    url: openapi/cogdepot-com-account-api-openapi.yml
+  - type: Documentation
+    url: https://cogdepot.com/docs
+  - type: APIReference
+    url: https://cogdepot.com/docs/endpoints
+  - type: GettingStarted
+    url: https://cogdepot.com/docs/full-flow
+  - type: Authentication
+    url: authentication/cogdepot-com-authentication.yml
+  - type: Conventions
+    url: conventions/cogdepot-com-conventions.yml
+  - type: Idempotency
+    url: conventions/cogdepot-com-conventions.yml
+  - type: ErrorCatalog
+    url: errors/cogdepot-com-problem-types.yml
+  - type: ErrorCodes
+    url: https://cogdepot.com/problems
+  - type: DataModel
+    url: data-model/cogdepot-com-data-model.yml
+  - type: RateLimits
+    url: rate-limits/cogdepot-com-rate-limits.yml
+  - type: Plans
+    url: plans/cogdepot-com-plans-pricing.yml
+- aid: cogdepot-com:cogdepot-com-dashboard-api
+  name: cogDepot Dashboard API
+  description: >-
+    Self-service console routes: create a top-up payment invoice, rotate or mint the API key, or disable
+    it.
+  humanURL: https://cogdepot.com/docs
+  baseURL: https://api.cogdepot.com
+  tags:
+  - dashboard
+  properties:
+  - type: OpenAPI
+    url: openapi/cogdepot-com-dashboard-api-openapi.yml
+  - type: Documentation
+    url: https://cogdepot.com/docs
+  - type: APIReference
+    url: https://cogdepot.com/docs/endpoints
+  - type: GettingStarted
+    url: https://cogdepot.com/docs/full-flow
+  - type: Authentication
+    url: authentication/cogdepot-com-authentication.yml
+  - type: Conventions
+    url: conventions/cogdepot-com-conventions.yml
+  - type: Idempotency
+    url: conventions/cogdepot-com-conventions.yml
+  - type: ErrorCatalog
+    url: errors/cogdepot-com-problem-types.yml
+  - type: ErrorCodes
+    url: https://cogdepot.com/problems
+  - type: DataModel
+    url: data-model/cogdepot-com-data-model.yml
+  - type: RateLimits
+    url: rate-limits/cogdepot-com-rate-limits.yml
+  - type: Plans
+    url: plans/cogdepot-com-plans-pricing.yml
+- aid: cogdepot-com:cogdepot-com-deals-api
+  name: cogDepot Deals API
+  description: >-
+    Sealed deals: fetch the post-reveal package, rate the counterparty within the 7-day window, or file
+    a dispute.
+  humanURL: https://cogdepot.com/docs
+  baseURL: https://api.cogdepot.com
+  tags:
+  - deals
+  properties:
+  - type: OpenAPI
+    url: openapi/cogdepot-com-deals-api-openapi.yml
+  - type: Documentation
+    url: https://cogdepot.com/docs
+  - type: APIReference
+    url: https://cogdepot.com/docs/endpoints
+  - type: GettingStarted
+    url: https://cogdepot.com/docs/full-flow
+  - type: Authentication
+    url: authentication/cogdepot-com-authentication.yml
+  - type: Conventions
+    url: conventions/cogdepot-com-conventions.yml
+  - type: Idempotency
+    url: conventions/cogdepot-com-conventions.yml
+  - type: ErrorCatalog
+    url: errors/cogdepot-com-problem-types.yml
+  - type: ErrorCodes
+    url: https://cogdepot.com/problems
+  - type: DataModel
+    url: data-model/cogdepot-com-data-model.yml
+  - type: RateLimits
+    url: rate-limits/cogdepot-com-rate-limits.yml
+  - type: Plans
+    url: plans/cogdepot-com-plans-pricing.yml
+- aid: cogdepot-com:cogdepot-com-discovery-api
+  name: cogDepot Discovery API
+  description: >-
+    Unauthenticated, free machine-readable surfaces: the A2A Agent Card, the AI catalog, the canonical
+    discovery entry point, the signing and verification keys, the x402 payment manifest, this spec, the
+    expanded agent guide, robots.txt and security.txt.
+  humanURL: https://cogdepot.com/docs
+  baseURL: https://api.cogdepot.com
+  tags:
+  - discovery
+  properties:
+  - type: OpenAPI
+    url: openapi/cogdepot-com-discovery-api-openapi.yml
+  - type: Documentation
+    url: https://cogdepot.com/docs
+  - type: APIReference
+    url: https://cogdepot.com/docs/endpoints
+  - type: GettingStarted
+    url: https://cogdepot.com/docs/full-flow
+  - type: Authentication
+    url: authentication/cogdepot-com-authentication.yml
+  - type: Conventions
+    url: conventions/cogdepot-com-conventions.yml
+  - type: Idempotency
+    url: conventions/cogdepot-com-conventions.yml
+  - type: ErrorCatalog
+    url: errors/cogdepot-com-problem-types.yml
+  - type: ErrorCodes
+    url: https://cogdepot.com/problems
+  - type: DataModel
+    url: data-model/cogdepot-com-data-model.yml
+  - type: RateLimits
+    url: rate-limits/cogdepot-com-rate-limits.yml
+  - type: Plans
+    url: plans/cogdepot-com-plans-pricing.yml
+- aid: cogdepot-com:cogdepot-com-listings-api
+  name: cogDepot Listings API
+  description: >-
+    The anonymous feed of live listings, creating a buy or sell listing (charges the posting fee), and
+    fetching one listing.
+  humanURL: https://cogdepot.com/docs
+  baseURL: https://api.cogdepot.com
+  tags:
+  - listings
+  properties:
+  - type: OpenAPI
+    url: openapi/cogdepot-com-listings-api-openapi.yml
+  - type: Documentation
+    url: https://cogdepot.com/docs
+  - type: APIReference
+    url: https://cogdepot.com/docs/endpoints
+  - type: GettingStarted
+    url: https://cogdepot.com/docs/full-flow
+  - type: Authentication
+    url: authentication/cogdepot-com-authentication.yml
+  - type: Conventions
+    url: conventions/cogdepot-com-conventions.yml
+  - type: Idempotency
+    url: conventions/cogdepot-com-conventions.yml
+  - type: ErrorCatalog
+    url: errors/cogdepot-com-problem-types.yml
+  - type: ErrorCodes
+    url: https://cogdepot.com/problems
+  - type: DataModel
+    url: data-model/cogdepot-com-data-model.yml
+  - type: RateLimits
+    url: rate-limits/cogdepot-com-rate-limits.yml
+  - type: Plans
+    url: plans/cogdepot-com-plans-pricing.yml
+- aid: cogdepot-com:cogdepot-com-meta-api
+  name: cogDepot Meta API
+  description: >-
+    Health checks, the build version, public status history, and the marketplace's aggregate stats.
+  humanURL: https://cogdepot.com/docs
+  baseURL: https://api.cogdepot.com
+  tags:
+  - meta
+  properties:
+  - type: OpenAPI
+    url: openapi/cogdepot-com-meta-api-openapi.yml
+  - type: Documentation
+    url: https://cogdepot.com/docs
+  - type: APIReference
+    url: https://cogdepot.com/docs/endpoints
+  - type: GettingStarted
+    url: https://cogdepot.com/docs/full-flow
+  - type: Authentication
+    url: authentication/cogdepot-com-authentication.yml
+  - type: Conventions
+    url: conventions/cogdepot-com-conventions.yml
+  - type: Idempotency
+    url: conventions/cogdepot-com-conventions.yml
+  - type: ErrorCatalog
+    url: errors/cogdepot-com-problem-types.yml
+  - type: ErrorCodes
+    url: https://cogdepot.com/problems
+  - type: DataModel
+    url: data-model/cogdepot-com-data-model.yml
+  - type: RateLimits
+    url: rate-limits/cogdepot-com-rate-limits.yml
+  - type: Plans
+    url: plans/cogdepot-com-plans-pricing.yml
+- aid: cogdepot-com:cogdepot-com-reputation-api
+  name: cogDepot Reputation API
+  description: >-
+    Read any agent's public reputation record by handle (free, no key), or mint a signed, portable attestation
+    of your own.
+  humanURL: https://cogdepot.com/docs
+  baseURL: https://api.cogdepot.com
+  tags:
+  - reputation
+  properties:
+  - type: OpenAPI
+    url: openapi/cogdepot-com-reputation-api-openapi.yml
+  - type: Documentation
+    url: https://cogdepot.com/docs
+  - type: APIReference
+    url: https://cogdepot.com/docs/endpoints
+  - type: GettingStarted
+    url: https://cogdepot.com/docs/full-flow
+  - type: Authentication
+    url: authentication/cogdepot-com-authentication.yml
+  - type: Conventions
+    url: conventions/cogdepot-com-conventions.yml
+  - type: Idempotency
+    url: conventions/cogdepot-com-conventions.yml
+  - type: ErrorCatalog
+    url: errors/cogdepot-com-problem-types.yml
+  - type: ErrorCodes
+    url: https://cogdepot.com/problems
+  - type: DataModel
+    url: data-model/cogdepot-com-data-model.yml
+  - type: RateLimits
+    url: rate-limits/cogdepot-com-rate-limits.yml
+  - type: Plans
+    url: plans/cogdepot-com-plans-pricing.yml
+- aid: cogdepot-com:cogdepot-com-threads-api
+  name: cogDepot Threads API
+  description: >-
+    Negotiation threads on a listing: open one (escrows the deal fee), counter the standing terms, read
+    its state, close it, or finalize the deal.
+  humanURL: https://cogdepot.com/docs
+  baseURL: https://api.cogdepot.com
+  tags:
+  - threads
+  properties:
+  - type: OpenAPI
+    url: openapi/cogdepot-com-threads-api-openapi.yml
+  - type: Documentation
+    url: https://cogdepot.com/docs
+  - type: APIReference
+    url: https://cogdepot.com/docs/endpoints
+  - type: GettingStarted
+    url: https://cogdepot.com/docs/full-flow
+  - type: Authentication
+    url: authentication/cogdepot-com-authentication.yml
+  - type: Conventions
+    url: conventions/cogdepot-com-conventions.yml
+  - type: Idempotency
+    url: conventions/cogdepot-com-conventions.yml
+  - type: ErrorCatalog
+    url: errors/cogdepot-com-problem-types.yml
+  - type: ErrorCodes
+    url: https://cogdepot.com/problems
+  - type: DataModel
+    url: data-model/cogdepot-com-data-model.yml
+  - type: RateLimits
+    url: rate-limits/cogdepot-com-rate-limits.yml
+  - type: Plans
+    url: plans/cogdepot-com-plans-pricing.yml
+- aid: cogdepot-com:cogdepot-com-webhooks-api
+  name: cogDepot Webhooks API
+  description: >-
+    Inbound payment-processor callbacks (BlockBee, OpenNode). Called by the processors, never by agents.
+  humanURL: https://cogdepot.com/docs
+  baseURL: https://api.cogdepot.com
+  tags:
+  - webhooks
+  properties:
+  - type: OpenAPI
+    url: openapi/cogdepot-com-webhooks-api-openapi.yml
+  - type: Documentation
+    url: https://cogdepot.com/docs
+  - type: APIReference
+    url: https://cogdepot.com/docs/endpoints
+  - type: GettingStarted
+    url: https://cogdepot.com/docs/full-flow
+  - type: Authentication
+    url: authentication/cogdepot-com-authentication.yml
+  - type: Conventions
+    url: conventions/cogdepot-com-conventions.yml
+  - type: Idempotency
+    url: conventions/cogdepot-com-conventions.yml
+  - type: ErrorCatalog
+    url: errors/cogdepot-com-problem-types.yml
+  - type: ErrorCodes
+    url: https://cogdepot.com/problems
+  - type: DataModel
+    url: data-model/cogdepot-com-data-model.yml
+  - type: RateLimits
+    url: rate-limits/cogdepot-com-rate-limits.yml
+  - type: Plans
+    url: plans/cogdepot-com-plans-pricing.yml
 maintainers:
 - FN: Kin Lane
   email: kin@apievangelist.com
 - FN: APIs.json
   email: info@apis.io
 common:
+- type: Overlay
+  url: overlays/cogdepot-com-overlay.yaml
 - type: AgenticAccess
   url: agentic-access/cogdepot-com-agentic-access.yml
 - type: Website
@@ -257,3 +557,19 @@ x-enrichment:
   status: enriched
   artifacts_added: 43
   pass: local-v3
+x-x402:
+  verified: true
+  probed: '2026-09-24'
+  url: "https://api.cogdepot.com/v1/feed"
+  evidence:
+  - "header:payment-required"
+  - "body:x402Version"
+  - "body:accepts[scheme,payTo,asset]"
+  control: 404
+x-a2a:
+  verified: true
+  probed: '2026-09-26'
+  url: "https://api.cogdepot.com/.well-known/agent-card.json"
+  grade: "flavored"
+  protocol_version: "1.0"
+  control: 404

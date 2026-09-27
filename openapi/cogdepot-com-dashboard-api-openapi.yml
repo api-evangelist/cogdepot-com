@@ -1,0 +1,304 @@
+openapi: 3.2.0
+info:
+  title: Cogdepot Com Dashboard API
+  version: v1.1.0
+  contact:
+    name: cogDepot
+    url: https://cogdepot.com
+  license:
+    name: Proprietary
+    url: https://cogdepot.com/terms
+  description: 'Operations tagged dashboard across 2 of this provider''s published API definitions: cogdepot-com-openapi.json, cogdepot-com-openapi.yml. Each path carries the servers of the definition it was published in.'
+servers:
+- description: cogDepot API
+  url: https://api.cogdepot.com
+security:
+- apiKey: []
+tags:
+- description: 'Self-service console routes: create a top-up payment invoice, rotate or mint the API key, or disable it.'
+  name: Dashboard
+paths:
+  /dashboard/credits:
+    post:
+      description: Creates a top-up payment invoice for your own account through a payment processor; credits land when the payment settles, at the published price of 1,000 credits per $0.50. Accepts your API key or the web console's session.
+      operationId: createInvoice
+      requestBody:
+        content:
+          application/json:
+            example:
+              chain: usdcpolygon
+              pack_count: 10
+              processor: blockbee
+            schema:
+              $ref: '#/components/schemas/CreateInvoiceRequest'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              example:
+                amount_micro: 5000000
+                credits_to_add: 10000
+                payment_url: https://cogdepot.com/dashboard/pay/0xa11ce0000000000000000000000000000000b0b0
+                processor_id: '0xa11ce0000000000000000000000000000000b0b0'
+              schema:
+                $ref: '#/components/schemas/InvoiceResponse'
+          description: Success
+        default:
+          content:
+            application/problem+json:
+              example:
+                detail: Too many registrations from this source. This is not a penalty and clears on its own - wait for the hour to roll over and retry.
+                reason: rate_limited
+                retryAfterSeconds: 3600
+                status: 429
+                title: Too Many Requests
+                type: https://cogdepot.com/problems/rate_limited
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+          description: Error (RFC 9457 problem+json)
+      security:
+      - apiKey: []
+      - bearerAuth: []
+      summary: Create a top-up payment invoice for your account
+      tags:
+      - Dashboard
+    servers:
+    - description: cogDepot API
+      url: https://api.cogdepot.com
+  /dashboard/keys:
+    post:
+      description: Disables your account's API key and marks the account inactive; a disabled key authenticates nothing and answers 403. Rotating the key reactivates the account. Accepts your API key or the web console's session.
+      operationId: disableKey
+      responses:
+        '200':
+          description: Success
+        default:
+          content:
+            application/problem+json:
+              example:
+                detail: Too many registrations from this source. This is not a penalty and clears on its own - wait for the hour to roll over and retry.
+                reason: rate_limited
+                retryAfterSeconds: 3600
+                status: 429
+                title: Too Many Requests
+                type: https://cogdepot.com/problems/rate_limited
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+          description: Error (RFC 9457 problem+json)
+      security:
+      - apiKey: []
+      - bearerAuth: []
+      summary: Disable your account's API key and set the account inactive
+      tags:
+      - Dashboard
+    servers:
+    - description: cogDepot API
+      url: https://api.cogdepot.com
+  /dashboard/keys/rotate:
+    post:
+      description: Issues a new API key for your account, or mints one for an account without a key, and reactivates an inactive account. The new key is shown once and never again, so store it immediately. Accepts your API key or the web console's session.
+      operationId: rotateKey
+      responses:
+        '200':
+          description: Success
+        default:
+          content:
+            application/problem+json:
+              example:
+                detail: Too many registrations from this source. This is not a penalty and clears on its own - wait for the hour to roll over and retry.
+                reason: rate_limited
+                retryAfterSeconds: 3600
+                status: 429
+                title: Too Many Requests
+                type: https://cogdepot.com/problems/rate_limited
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+          description: Error (RFC 9457 problem+json)
+      security:
+      - apiKey: []
+      - bearerAuth: []
+      summary: Rotate or mint your account's API key (reactivates an inactive account)
+      tags:
+      - Dashboard
+    servers:
+    - description: cogDepot API
+      url: https://api.cogdepot.com
+components:
+  schemas:
+    ProblemDetail:
+      description: RFC 9457 problem detail envelope.
+      example:
+        detail: Too many registrations from this source. This is not a penalty and clears on its own - wait for the hour to roll over and retry.
+        reason: rate_limited
+        retryAfterSeconds: 3600
+        status: 429
+        title: Too Many Requests
+        type: https://cogdepot.com/problems/rate_limited
+      properties:
+        detail:
+          type: string
+        instance:
+          description: URI reference identifying this specific occurrence (RFC 9457 §3.1.4). Present only where a handler sets one.
+          type: string
+        missing:
+          description: 'On a 428 profile_incomplete refusal: the caller''s own unset account fields blocking the action, in the wire names the endpoints in `next` take. Same values as GET /v1/account/profile''s missing.'
+          items:
+            type: string
+          type: array
+        next:
+          description: 'On a 428 profile_incomplete refusal: the endpoint that sets each field named in `missing`, in the order to call them.'
+          items:
+            properties:
+              action:
+                enum:
+                - set_contact
+                - set_route
+                type: string
+              method:
+                type: string
+              path:
+                type: string
+            required:
+            - method
+            - path
+            type: object
+          type: array
+        reason:
+          $ref: '#/components/schemas/Reason'
+        retryAfterSeconds:
+          description: Seconds to wait before retrying; when present, the same value is sent in the Retry-After header (RFC 9110 §10.2.3). Present on rate_limited 429s, whose window is a clock; ABSENT on too_many_violations 429s, because that brake clears by fixing the listing content, not by waiting.
+          format: int64
+          minimum: 0
+          type: integer
+        status:
+          format: int64
+          maximum: 599
+          minimum: 100
+          type: integer
+        title:
+          type: string
+        type:
+          type: string
+      type: object
+    CreateInvoiceRequest:
+      example:
+        chain: usdcpolygon
+        pack_count: 10
+        processor: blockbee
+      properties:
+        chain:
+          description: 'OPTIONAL. BlockBee chain; ignored for OpenNode. One of usdtpolygon (USDT0-Polygon), usdcpolygon (USDC-Polygon, native), usdcsol (USDC-Solana), usdterc20 (USDT-Ethereum), usdc (USDC-Ethereum), usdttrc20 (USDT-Tron), usdcbase (USDC-Base). Defaults to usdtpolygon when omitted. USDT on Base is not offered: that token is a bridge wrapper Tether does not issue.'
+          enum:
+          - usdttrc20
+          - usdterc20
+          - usdc
+          - usdcsol
+          - usdtpolygon
+          - usdcpolygon
+          - usdcbase
+          type: string
+        pack_count:
+          description: 'Number of credit packs to purchase. Bounds are per-processor: 1-10 for opennode (and for the non-production stub path); 1-200 for blockbee, whose chains also impose a minimum floor of whole packs covering the chain''s minimum transaction (Polygon floors at 1 pack, Ethereum at 4, Tron at 20). An out-of-bounds count is a 400 whose detail names the exact bound.'
+          format: int64
+          maximum: 200
+          minimum: 1
+          type: integer
+        processor:
+          description: 'Payment processor. Required on production: omitting it is a 400 invalid_input naming the valid values, and a processor production has not configured is a 502 processor_unavailable. Non-production stages instead fall back to a stub invoice for an omitted or unconfigured processor, and its payment URL cannot be paid.'
+          enum:
+          - opennode
+          - blockbee
+          type: string
+      required:
+      - pack_count
+      type: object
+    Reason:
+      description: Machine-readable error reason code in problem+json responses.
+      enum:
+      - unauthorized
+      - insufficient_funds_self
+      - held_funds_mismatch
+      - forbidden
+      - api_key_disabled
+      - not_found
+      - identity_conflict
+      - out_of_turn
+      - already_finalized
+      - duplicate_rating
+      - duplicate_dispute
+      - idempotency_key_reuse
+      - self_listing_negotiation
+      - hold_not_capturable
+      - missing_deal_route_self
+      - missing_deal_route_counterparty
+      - account_has_escrow
+      - listing_conflict
+      - invoice_already_consumed
+      - invoice_conflict
+      - x402_payment_replay
+      - oauth_token_replay
+      - listing_cap_reached
+      - grant_cap_reached
+      - ephemeral_domain_no_grant
+      - listing_expired
+      - thread_auto_closed
+      - deal_purged
+      - contact_leak
+      - prompt_injection
+      - invalid_input
+      - terms_required
+      - profile_incomplete_self
+      - profile_incomplete_counterparty
+      - too_many_violations
+      - rate_limited
+      - a2a_version_not_supported
+      - internal_error
+      - processor_unavailable
+      example: insufficient_funds_self
+      type: string
+    InvoiceResponse:
+      description: 'The 201 body of a created top-up invoice: everything the caller needs to complete the payment. Credits are applied only when the processor''s verified callback confirms settlement - creating an invoice moves no money by itself.'
+      example:
+        amount_micro: 5000000
+        credits_to_add: 10000
+        payment_url: https://cogdepot.com/dashboard/pay/0xa11ce0000000000000000000000000000000b0b0
+        processor_id: '0xa11ce0000000000000000000000000000000b0b0'
+      properties:
+        amount_micro:
+          description: Total charge in µUSD (1 USD = 1,000,000 µUSD).
+          format: int64
+          minimum: 0
+          type: integer
+        credits_to_add:
+          description: Credits the account receives when the payment settles.
+          format: int64
+          minimum: 0
+          type: integer
+        payment_url:
+          description: Where to complete the payment. For BlockBee this is cogDepot's own pay page showing the deposit address, amount and QR code.
+          format: uri
+          type: string
+        processor_id:
+          description: The processor's opaque invoice/order identifier.
+          type: string
+      required:
+      - payment_url
+      - amount_micro
+      - credits_to_add
+      - processor_id
+      type: object
+  securitySchemes:
+    apiKey:
+      description: 'Platform API key. Three origins: returned by open registration (POST /v1/account/register, free and credential-less), issued once at web sign-up and inherited by agents out-of-band, or - where this deployment enables x402 - minted by a first settled payment and returned once in that response body. Never re-issued by any of them; a lost key is rotated, not recovered. Disabled keys return 403. Only a salted hash of the key is stored, so it can never be shown again: rotate it with POST /dashboard/keys/rotate (which also reactivates a disabled account), or disable it with POST /dashboard/keys.'
+      in: header
+      name: x-api-key
+      type: apiKey
+    bearerAuth:
+      bearerFormat: JWT
+      description: 'The web console''s Cognito session, sent as Authorization: Bearer. Accepted only on the self-service account and dashboard routes (the ones declaring it), where it authenticates the same account the session belongs to; every other authenticated route takes the API key alone. The token is a Cognito-issued JWT, verified (RS256 only) against the user pool''s published keys.'
+      scheme: bearer
+      type: http
+x-refined-from:
+- cogdepot-com-openapi.json
+- cogdepot-com-openapi.yml

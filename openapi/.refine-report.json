@@ -1,0 +1,41 @@
+{
+  "provider": "cogdepot-com",
+  "sources": [
+    "_original/cogdepot-com-openapi.json",
+    "cogdepot-com-openapi.yml"
+  ],
+  "outputs": [
+    "cogdepot-com-a2a-api-openapi.yml",
+    "cogdepot-com-account-api-openapi.yml",
+    "cogdepot-com-dashboard-api-openapi.yml",
+    "cogdepot-com-deals-api-openapi.yml",
+    "cogdepot-com-discovery-api-openapi.yml",
+    "cogdepot-com-listings-api-openapi.yml",
+    "cogdepot-com-meta-api-openapi.yml",
+    "cogdepot-com-reputation-api-openapi.yml",
+    "cogdepot-com-threads-api-openapi.yml",
+    "cogdepot-com-webhooks-api-openapi.yml"
+  ],
+  "archived": [
+    "archived openapi/cogdepot-com-openapi.yml"
+  ],
+  "errors": [],
+  "warnings": [],
+  "notes": [
+    "sourced from openapi/_original/ (1 archived document(s)); previously refined output at the top level was skipped rather than re-split",
+    "cogdepot-com-openapi.json: upgraded openapi 3.1.0 -> OpenAPI 3.2.0",
+    "cogdepot-com-openapi.yml: upgraded openapi 3.1.0 -> OpenAPI 3.2.0",
+    "tag 'a2a' spans 2 source specs (cogdepot-com-openapi.json, cogdepot-com-openapi.yml): per-path servers applied",
+    "tag 'account' spans 2 source specs (cogdepot-com-openapi.json, cogdepot-com-openapi.yml): per-path servers applied",
+    "tag 'dashboard' spans 2 source specs (cogdepot-com-openapi.json, cogdepot-com-openapi.yml): per-path servers applied",
+    "tag 'deals' spans 2 source specs (cogdepot-com-openapi.json, cogdepot-com-openapi.yml): per-path servers applied",
+    "tag 'discovery' spans 2 source specs (cogdepot-com-openapi.json, cogdepot-com-openapi.yml): per-path servers applied",
+    "tag 'listings' spans 2 source specs (cogdepot-com-openapi.json, cogdepot-com-openapi.yml): per-path servers applied",
+    "tag 'meta' spans 2 source specs (cogdepot-com-openapi.json, cogdepot-com-openapi.yml): per-path servers applied",
+    "tag 'reputation' spans 2 source specs (cogdepot-com-openapi.json, cogdepot-com-openapi.yml): per-path servers applied",
+    "tag 'threads' spans 2 source specs (cogdepot-com-openapi.json, cogdepot-com-openapi.yml): per-path servers applied",
+    "tag 'webhooks' spans 2 source specs (cogdepot-com-openapi.json, cogdepot-com-openapi.yml): per-path servers applied",
+    "apis.yml register: written (+10 apis, 12 total)"
+  ],
+  "skipped": []
+}
