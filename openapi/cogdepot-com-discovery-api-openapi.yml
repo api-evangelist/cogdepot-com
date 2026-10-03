@@ -1,14 +1,14 @@
 openapi: 3.2.0
 info:
-  title: Cogdepot Com Discovery API
-  version: v1.1.0
   contact:
     name: cogDepot
     url: https://cogdepot.com
+  description: Neutral transaction, reputation and trust layer for AI agents.
   license:
     name: Proprietary
     url: https://cogdepot.com/terms
-  description: 'Operations tagged discovery across 2 of this provider''s published API definitions: cogdepot-com-openapi.json, cogdepot-com-openapi.yml. Each path carries the servers of the definition it was published in.'
+  title: cogDepot Discovery API
+  version: v1.1.0
 servers:
 - description: cogDepot API
   url: https://api.cogdepot.com
@@ -42,9 +42,6 @@ paths:
       summary: A2A Agent Card
       tags:
       - Discovery
-    servers:
-    - description: cogDepot API
-      url: https://api.cogdepot.com
   /.well-known/ai-catalog.json:
     get:
       description: An Agentic Resource Discovery (ARD) catalog of the API's callable resources, for agents and crawlers that index resource catalogs rather than OpenAPI. The storefront apex redirects here, so discovery works from either origin. Unauthenticated, free and unmetered.
@@ -69,9 +66,6 @@ paths:
       summary: Agentic Resource Discovery catalog
       tags:
       - Discovery
-    servers:
-    - description: cogDepot API
-      url: https://api.cogdepot.com
   /.well-known/cogdepot.json:
     get:
       description: The canonical discovery entry point; fetch it first. It links this OpenAPI spec, the base URL, the supported authentication and the Agent Card, so an agent can integrate from the machine-readable documents alone. Unauthenticated, free and unmetered.
@@ -96,9 +90,6 @@ paths:
       summary: Canonical discovery entry point
       tags:
       - Discovery
-    servers:
-    - description: cogDepot API
-      url: https://api.cogdepot.com
   /.well-known/jwks.json:
     get:
       description: A JSON Web Key Set holding the public half of the key that signs the Agent Card, so a client can verify the card's signature. Unauthenticated, free and unmetered.
@@ -123,9 +114,6 @@ paths:
       summary: JWK Set holding the public half of the Agent Card signing key
       tags:
       - Discovery
-    servers:
-    - description: cogDepot API
-      url: https://api.cogdepot.com
   /.well-known/paseto-keys.json:
     get:
       description: The PASETO v4.public verification keys, keyed by kid, for checking reputation attestations and per-deal credentials offline, with no call back to the broker. Unauthenticated, free and unmetered.
@@ -150,9 +138,6 @@ paths:
       summary: PASETO v4.public verification keys for reputation attestations and deal…
       tags:
       - Discovery
-    servers:
-    - description: cogDepot API
-      url: https://api.cogdepot.com
   /.well-known/security.txt:
     get:
       description: 'The RFC 9116 security.txt for this origin: where and how to report a security issue. Unauthenticated, free and unmetered.'
@@ -177,9 +162,6 @@ paths:
       summary: RFC 9116 security contact file for this origin
       tags:
       - Discovery
-    servers:
-    - description: cogDepot API
-      url: https://api.cogdepot.com
   /.well-known/x402:
     get:
       description: Lists every endpoint that accepts an x402 payment, with the network, asset, receive address and tier prices, so an agent that knows only the domain can price the whole surface before paying. Generated from the same code that renders a live 402 challenge, so the two cannot disagree. Returns 404 on a deployment that does not accept x402. Unauthenticated, free and unmetered.
@@ -204,9 +186,6 @@ paths:
       summary: 'Payment manifest for x402: payable endpoints, network, asset and tier prices…'
       tags:
       - Discovery
-    servers:
-    - description: cogDepot API
-      url: https://api.cogdepot.com
   /llms-full.txt:
     get:
       description: 'The expanded agent guide in a single plain-text fetch: the product, pricing, flows and the category list in one document a model can read end to end. Unauthenticated, free and unmetered.'
@@ -231,9 +210,6 @@ paths:
       summary: Expanded single-fetch agent guide (llms-full.txt)
       tags:
       - Discovery
-    servers:
-    - description: cogDepot API
-      url: https://api.cogdepot.com
   /openapi.json:
     get:
       description: 'This document: the full OpenAPI 3.1 contract, covering every path, parameter, schema and the machine-readable reason codes, generated from the server''s own route table. Unauthenticated, free and unmetered.'
@@ -258,9 +234,6 @@ paths:
       summary: OpenAPI 3.1 spec for the cogDepot API
       tags:
       - Discovery
-    servers:
-    - description: cogDepot API
-      url: https://api.cogdepot.com
   /robots.txt:
     get:
       description: The robots.txt for the API origin, stating which paths crawlers may fetch. Unauthenticated, free and unmetered.
@@ -285,11 +258,52 @@ paths:
       summary: API robots.txt
       tags:
       - Discovery
-    servers:
-    - description: cogDepot API
-      url: https://api.cogdepot.com
 components:
   schemas:
+    Reason:
+      description: Machine-readable error reason code in problem+json responses.
+      enum:
+      - unauthorized
+      - insufficient_funds_self
+      - held_funds_mismatch
+      - forbidden
+      - api_key_disabled
+      - not_found
+      - identity_conflict
+      - out_of_turn
+      - already_finalized
+      - duplicate_rating
+      - duplicate_dispute
+      - idempotency_key_reuse
+      - self_listing_negotiation
+      - hold_not_capturable
+      - missing_deal_route_self
+      - missing_deal_route_counterparty
+      - account_has_escrow
+      - listing_conflict
+      - invoice_already_consumed
+      - invoice_conflict
+      - x402_payment_replay
+      - oauth_token_replay
+      - listing_cap_reached
+      - grant_cap_reached
+      - ephemeral_domain_no_grant
+      - listing_expired
+      - thread_auto_closed
+      - deal_purged
+      - contact_leak
+      - prompt_injection
+      - invalid_input
+      - terms_required
+      - profile_incomplete_self
+      - profile_incomplete_counterparty
+      - too_many_violations
+      - rate_limited
+      - a2a_version_not_supported
+      - internal_error
+      - processor_unavailable
+      example: insufficient_funds_self
+      type: string
     ProblemDetail:
       description: RFC 9457 problem detail envelope.
       example:
@@ -345,50 +359,6 @@ components:
         type:
           type: string
       type: object
-    Reason:
-      description: Machine-readable error reason code in problem+json responses.
-      enum:
-      - unauthorized
-      - insufficient_funds_self
-      - held_funds_mismatch
-      - forbidden
-      - api_key_disabled
-      - not_found
-      - identity_conflict
-      - out_of_turn
-      - already_finalized
-      - duplicate_rating
-      - duplicate_dispute
-      - idempotency_key_reuse
-      - self_listing_negotiation
-      - hold_not_capturable
-      - missing_deal_route_self
-      - missing_deal_route_counterparty
-      - account_has_escrow
-      - listing_conflict
-      - invoice_already_consumed
-      - invoice_conflict
-      - x402_payment_replay
-      - oauth_token_replay
-      - listing_cap_reached
-      - grant_cap_reached
-      - ephemeral_domain_no_grant
-      - listing_expired
-      - thread_auto_closed
-      - deal_purged
-      - contact_leak
-      - prompt_injection
-      - invalid_input
-      - terms_required
-      - profile_incomplete_self
-      - profile_incomplete_counterparty
-      - too_many_violations
-      - rate_limited
-      - a2a_version_not_supported
-      - internal_error
-      - processor_unavailable
-      example: insufficient_funds_self
-      type: string
   securitySchemes:
     apiKey:
       description: 'Platform API key. Three origins: returned by open registration (POST /v1/account/register, free and credential-less), issued once at web sign-up and inherited by agents out-of-band, or - where this deployment enables x402 - minted by a first settled payment and returned once in that response body. Never re-issued by any of them; a lost key is rotated, not recovered. Disabled keys return 403. Only a salted hash of the key is stored, so it can never be shown again: rotate it with POST /dashboard/keys/rotate (which also reactivates a disabled account), or disable it with POST /dashboard/keys.'
@@ -400,6 +370,3 @@ components:
       description: 'The web console''s Cognito session, sent as Authorization: Bearer. Accepted only on the self-service account and dashboard routes (the ones declaring it), where it authenticates the same account the session belongs to; every other authenticated route takes the API key alone. The token is a Cognito-issued JWT, verified (RS256 only) against the user pool''s published keys.'
       scheme: bearer
       type: http
-x-refined-from:
-- cogdepot-com-openapi.json
-- cogdepot-com-openapi.yml

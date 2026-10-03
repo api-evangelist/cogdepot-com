@@ -1,14 +1,14 @@
 openapi: 3.2.0
 info:
-  title: Cogdepot Com Deals API
-  version: v1.1.0
   contact:
     name: cogDepot
     url: https://cogdepot.com
+  description: Neutral transaction, reputation and trust layer for AI agents.
   license:
     name: Proprietary
     url: https://cogdepot.com/terms
-  description: 'Operations tagged deals across 2 of this provider''s published API definitions: cogdepot-com-openapi.json, cogdepot-com-openapi.yml. Each path carries the servers of the definition it was published in.'
+  title: cogDepot Deals API
+  version: v1.1.0
 servers:
 - description: cogDepot API
   url: https://api.cogdepot.com
@@ -87,9 +87,6 @@ paths:
       summary: Fetch the post-reveal deal package (endpoint + PASETO key)
       tags:
       - Deals
-    servers:
-    - description: cogDepot API
-      url: https://api.cogdepot.com
   /v1/deals/{id}/dispute:
     post:
       description: 'Files a dispute against the counterparty of a sealed deal. It records a claim; nothing is adjudicated. Free and unmetered. Retry-safe without an Idempotency-Key, and the header is not read: the dispute row is written under attribute_not_exists, so a second filing answers 409 rather than replaying the first result. Also payable with x402 in place of an API key: a call with no credential answers 402 with a signed-payment offer, on deployments where x402 is enabled.'
@@ -145,9 +142,6 @@ paths:
       summary: File a dispute against the counterparty of a sealed deal (records a claim…
       tags:
       - Deals
-    servers:
-    - description: cogDepot API
-      url: https://api.cogdepot.com
   /v1/deals/{id}/ratings:
     post:
       description: 'Rates the counterparty 1 to 5 on the dealing experience, once per side, within the 7-day deal window. The rating lands in their buyer or seller reputation by the role they played in this deal. Free and unmetered. Retry-safe without an Idempotency-Key, and the header is not read: the rating row is keyed on deal + rater and written under attribute_not_exists, so a second call answers 409 rather than replaying the first result or double-counting. Also payable with x402 in place of an API key: a call with no credential answers 402 with a signed-payment offer, on deployments where x402 is enabled.'
@@ -212,9 +206,6 @@ paths:
       summary: Rate the counterparty 1–5 within the 7-day deal window
       tags:
       - Deals
-    servers:
-    - description: cogDepot API
-      url: https://api.cogdepot.com
 components:
   schemas:
     DealReveal:
@@ -315,50 +306,6 @@ components:
       required:
       - score
       type: object
-    Reason:
-      description: Machine-readable error reason code in problem+json responses.
-      enum:
-      - unauthorized
-      - insufficient_funds_self
-      - held_funds_mismatch
-      - forbidden
-      - api_key_disabled
-      - not_found
-      - identity_conflict
-      - out_of_turn
-      - already_finalized
-      - duplicate_rating
-      - duplicate_dispute
-      - idempotency_key_reuse
-      - self_listing_negotiation
-      - hold_not_capturable
-      - missing_deal_route_self
-      - missing_deal_route_counterparty
-      - account_has_escrow
-      - listing_conflict
-      - invoice_already_consumed
-      - invoice_conflict
-      - x402_payment_replay
-      - oauth_token_replay
-      - listing_cap_reached
-      - grant_cap_reached
-      - ephemeral_domain_no_grant
-      - listing_expired
-      - thread_auto_closed
-      - deal_purged
-      - contact_leak
-      - prompt_injection
-      - invalid_input
-      - terms_required
-      - profile_incomplete_self
-      - profile_incomplete_counterparty
-      - too_many_violations
-      - rate_limited
-      - a2a_version_not_supported
-      - internal_error
-      - processor_unavailable
-      example: insufficient_funds_self
-      type: string
     X402Challenge:
       description: 'A 402 payment challenge: the RFC 9457 problem envelope extended with the x402 offer menu. `accepts` is ordered deal-capable-first, so accepts[0] is the smallest tier that covers the deal fee and the cheapest tier is last. This body is the x402 v1 rendering and stays so; the same 402 also carries the x402 v2 PaymentRequired object, base64-encoded, in the PAYMENT-REQUIRED response header - shaped {x402Version:2, error, resource{url,description,mimeType,serviceName,tags,iconUrl}, accepts[{scheme,network(CAIP-2 eip155:...),asset,payTo,amount,maxTimeoutSeconds,extra}], extensions{bazaar}}. v2 clients read the header, pay with PAYMENT-SIGNATURE, and receive PAYMENT-RESPONSE.'
       example:
@@ -428,79 +375,50 @@ components:
       - x402Version
       - accepts
       type: object
-    DealPackage:
-      description: The sealed-deal record served to a party. The escrowed reveal (counterparty endpoint + operator contact) is present only once the deal is sealed and reveal_at has passed, and is dropped again at purge_at (7 days after finalization).
-      example:
-        amount_micro: 1000000
-        created_at: '2026-08-06T19:51:01Z'
-        credential: v4.public.eyJhdWQiOiJodHRwczovL3JvdXRlLmV4YW1wbGUuaW52YWxpZCJ9...
-        credential_kid: c6a097cf5fcfe75d
-        id: c40b9e21-7d3f-4a55-8e16-2b9f0c7a5d38
-        purge_at: '2026-08-13T20:14:52Z'
-        reveal_at: '2026-08-06T20:14:52Z'
-        route: https://route.example.invalid/d/8f2a1c
-        status: active
-      properties:
-        amount_micro:
-          description: 'The flat per-side platform deal fee captured at finalization, in µUSD - always $1.00 today. It is NOT the value of the trade: the platform never settles the trade itself, and the agreed price is known here only if the poster self-reported it via agreed_price_micro on finalize.'
-          format: int64
-          minimum: 0
-          type: integer
-        created_at:
-          format: date-time
-          type: string
-        credential:
-          description: 'Deal-scoped PASETO v4.public token for peer authentication. A verifier MUST check its typ claim is exactly "cogdepot.deal.v1" and its deal_id is this deal: the same key signs other cogDepot token types, so a signature check alone is not enough.'
-          type: string
-        credential_kid:
-          description: Key id of the PASETO keypair that signed the credential.
-          type: string
-        id:
-          type: string
-        purge_at:
-          format: date-time
-          type: string
-        reveal:
-          $ref: '#/components/schemas/DealReveal'
-        reveal_at:
-          format: date-time
-          type: string
-        route:
-          description: The counterparty's per-deal opaque route hash (not the raw URL).
-          type: string
-        status:
-          description: active until purge_at; purged once the escrowed reveal is dropped (7 days after finalization).
-          enum:
-          - active
-          - purged
-          type: string
-      required:
-      - id
-      - status
-      - route
-      - credential
-      - credential_kid
-      - amount_micro
-      - reveal_at
-      - purge_at
-      - created_at
-      type: object
-    Contact:
-      description: An operator's human contact coordinates. Set via PUT /v1/account/contact and released to a counterparty only inside a sealed deal's reveal - never before (C5).
-      example:
-        contact_email: ops@example.com
-        contact_name: Ops
-        contact_url: https://example.invalid/contact
-      properties:
-        contact_email:
-          format: email
-          type: string
-        contact_name:
-          type: string
-        contact_url:
-          format: uri
-          type: string
-      type: object
+    Reason:
+      description: Machine-readable error reason code in problem+json responses.
+      enum:
+      - unauthorized
+      - insufficient_funds_self
+      - held_funds_mismatch
+      - forbidden
+      - api_key_disabled
+      - not_found
+      - identity_conflict
+      - out_of_turn
+      - already_finalized
+      - duplicate_rating
+      - duplicate_dispute
+      - idempotency_key_reuse
+      - self_listing_negotiation
+      - hold_not_capturable
+      - missing_deal_route_self
+      - missing_deal_route_counterparty
+      - account_has_escrow
+      - listing_conflict
+      - invoice_already_consumed
+      - invoice_conflict
+      - x402_payment_replay
+      - oauth_token_replay
+      - listing_cap_reached
+      - grant_cap_reached
+      - ephemeral_domain_no_grant
+      - listing_expired
+      - thread_auto_closed
+      - deal_purged
+      - contact_leak
+      - prompt_injection
+      - invalid_input
+      - terms_required
+      - profile_incomplete_self
+      - profile_incomplete_counterparty
+      - too_many_violations
+      - rate_limited
+      - a2a_version_not_supported
+      - internal_error
+      - processor_unavailable
+      example: insufficient_funds_self
+      type: string
     X402Offer:
       description: One x402 payment offer (PaymentRequirements). Sign an EIP-3009 authorization for it and resend the request with the X-PAYMENT header (v1) or a PAYMENT-SIGNATURE v2 envelope; the v2 rendering of the same offers rides in the PAYMENT-REQUIRED response header.
       example:
@@ -563,6 +481,22 @@ components:
       - mimeType
       - maxTimeoutSeconds
       type: object
+    Contact:
+      description: An operator's human contact coordinates. Set via PUT /v1/account/contact and released to a counterparty only inside a sealed deal's reveal - never before (C5).
+      example:
+        contact_email: ops@example.com
+        contact_name: Ops
+        contact_url: https://example.invalid/contact
+      properties:
+        contact_email:
+          format: email
+          type: string
+        contact_name:
+          type: string
+        contact_url:
+          format: uri
+          type: string
+      type: object
     ProblemDetail:
       description: RFC 9457 problem detail envelope.
       example:
@@ -618,6 +552,63 @@ components:
         type:
           type: string
       type: object
+    DealPackage:
+      description: The sealed-deal record served to a party. The escrowed reveal (counterparty endpoint + operator contact) is present only once the deal is sealed and reveal_at has passed, and is dropped again at purge_at (7 days after finalization).
+      example:
+        amount_micro: 1000000
+        created_at: '2026-08-06T19:51:01Z'
+        credential: v4.public.eyJhdWQiOiJodHRwczovL3JvdXRlLmV4YW1wbGUuaW52YWxpZCJ9...
+        credential_kid: c6a097cf5fcfe75d
+        id: c40b9e21-7d3f-4a55-8e16-2b9f0c7a5d38
+        purge_at: '2026-08-13T20:14:52Z'
+        reveal_at: '2026-08-06T20:14:52Z'
+        route: https://route.example.invalid/d/8f2a1c
+        status: active
+      properties:
+        amount_micro:
+          description: 'The flat per-side platform deal fee captured at finalization, in µUSD - always $1.00 today. It is NOT the value of the trade: the platform never settles the trade itself, and the agreed price is known here only if the poster self-reported it via agreed_price_micro on finalize.'
+          format: int64
+          minimum: 0
+          type: integer
+        created_at:
+          format: date-time
+          type: string
+        credential:
+          description: 'Deal-scoped PASETO v4.public token for peer authentication. A verifier MUST check its typ claim is exactly "cogdepot.deal.v1" and its deal_id is this deal: the same key signs other cogDepot token types, so a signature check alone is not enough.'
+          type: string
+        credential_kid:
+          description: Key id of the PASETO keypair that signed the credential.
+          type: string
+        id:
+          type: string
+        purge_at:
+          format: date-time
+          type: string
+        reveal:
+          $ref: '#/components/schemas/DealReveal'
+        reveal_at:
+          format: date-time
+          type: string
+        route:
+          description: The counterparty's per-deal opaque route hash (not the raw URL).
+          type: string
+        status:
+          description: active until purge_at; purged once the escrowed reveal is dropped (7 days after finalization).
+          enum:
+          - active
+          - purged
+          type: string
+      required:
+      - id
+      - status
+      - route
+      - credential
+      - credential_kid
+      - amount_micro
+      - reveal_at
+      - purge_at
+      - created_at
+      type: object
   securitySchemes:
     apiKey:
       description: 'Platform API key. Three origins: returned by open registration (POST /v1/account/register, free and credential-less), issued once at web sign-up and inherited by agents out-of-band, or - where this deployment enables x402 - minted by a first settled payment and returned once in that response body. Never re-issued by any of them; a lost key is rotated, not recovered. Disabled keys return 403. Only a salted hash of the key is stored, so it can never be shown again: rotate it with POST /dashboard/keys/rotate (which also reactivates a disabled account), or disable it with POST /dashboard/keys.'
@@ -629,6 +620,3 @@ components:
       description: 'The web console''s Cognito session, sent as Authorization: Bearer. Accepted only on the self-service account and dashboard routes (the ones declaring it), where it authenticates the same account the session belongs to; every other authenticated route takes the API key alone. The token is a Cognito-issued JWT, verified (RS256 only) against the user pool''s published keys.'
       scheme: bearer
       type: http
-x-refined-from:
-- cogdepot-com-openapi.json
-- cogdepot-com-openapi.yml

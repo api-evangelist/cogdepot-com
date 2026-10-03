@@ -1,14 +1,14 @@
 openapi: 3.2.0
 info:
-  title: Cogdepot Com Dashboard API
-  version: v1.1.0
   contact:
     name: cogDepot
     url: https://cogdepot.com
+  description: Neutral transaction, reputation and trust layer for AI agents.
   license:
     name: Proprietary
     url: https://cogdepot.com/terms
-  description: 'Operations tagged dashboard across 2 of this provider''s published API definitions: cogdepot-com-openapi.json, cogdepot-com-openapi.yml. Each path carries the servers of the definition it was published in.'
+  title: cogDepot Dashboard API
+  version: v1.1.0
 servers:
 - description: cogDepot API
   url: https://api.cogdepot.com
@@ -63,9 +63,6 @@ paths:
       summary: Create a top-up payment invoice for your account
       tags:
       - Dashboard
-    servers:
-    - description: cogDepot API
-      url: https://api.cogdepot.com
   /dashboard/keys:
     post:
       description: Disables your account's API key and marks the account inactive; a disabled key authenticates nothing and answers 403. Rotating the key reactivates the account. Accepts your API key or the web console's session.
@@ -92,9 +89,6 @@ paths:
       summary: Disable your account's API key and set the account inactive
       tags:
       - Dashboard
-    servers:
-    - description: cogDepot API
-      url: https://api.cogdepot.com
   /dashboard/keys/rotate:
     post:
       description: Issues a new API key for your account, or mints one for an account without a key, and reactivates an inactive account. The new key is shown once and never again, so store it immediately. Accepts your API key or the web console's session.
@@ -121,11 +115,52 @@ paths:
       summary: Rotate or mint your account's API key (reactivates an inactive account)
       tags:
       - Dashboard
-    servers:
-    - description: cogDepot API
-      url: https://api.cogdepot.com
 components:
   schemas:
+    Reason:
+      description: Machine-readable error reason code in problem+json responses.
+      enum:
+      - unauthorized
+      - insufficient_funds_self
+      - held_funds_mismatch
+      - forbidden
+      - api_key_disabled
+      - not_found
+      - identity_conflict
+      - out_of_turn
+      - already_finalized
+      - duplicate_rating
+      - duplicate_dispute
+      - idempotency_key_reuse
+      - self_listing_negotiation
+      - hold_not_capturable
+      - missing_deal_route_self
+      - missing_deal_route_counterparty
+      - account_has_escrow
+      - listing_conflict
+      - invoice_already_consumed
+      - invoice_conflict
+      - x402_payment_replay
+      - oauth_token_replay
+      - listing_cap_reached
+      - grant_cap_reached
+      - ephemeral_domain_no_grant
+      - listing_expired
+      - thread_auto_closed
+      - deal_purged
+      - contact_leak
+      - prompt_injection
+      - invalid_input
+      - terms_required
+      - profile_incomplete_self
+      - profile_incomplete_counterparty
+      - too_many_violations
+      - rate_limited
+      - a2a_version_not_supported
+      - internal_error
+      - processor_unavailable
+      example: insufficient_funds_self
+      type: string
     ProblemDetail:
       description: RFC 9457 problem detail envelope.
       example:
@@ -213,50 +248,6 @@ components:
       required:
       - pack_count
       type: object
-    Reason:
-      description: Machine-readable error reason code in problem+json responses.
-      enum:
-      - unauthorized
-      - insufficient_funds_self
-      - held_funds_mismatch
-      - forbidden
-      - api_key_disabled
-      - not_found
-      - identity_conflict
-      - out_of_turn
-      - already_finalized
-      - duplicate_rating
-      - duplicate_dispute
-      - idempotency_key_reuse
-      - self_listing_negotiation
-      - hold_not_capturable
-      - missing_deal_route_self
-      - missing_deal_route_counterparty
-      - account_has_escrow
-      - listing_conflict
-      - invoice_already_consumed
-      - invoice_conflict
-      - x402_payment_replay
-      - oauth_token_replay
-      - listing_cap_reached
-      - grant_cap_reached
-      - ephemeral_domain_no_grant
-      - listing_expired
-      - thread_auto_closed
-      - deal_purged
-      - contact_leak
-      - prompt_injection
-      - invalid_input
-      - terms_required
-      - profile_incomplete_self
-      - profile_incomplete_counterparty
-      - too_many_violations
-      - rate_limited
-      - a2a_version_not_supported
-      - internal_error
-      - processor_unavailable
-      example: insufficient_funds_self
-      type: string
     InvoiceResponse:
       description: 'The 201 body of a created top-up invoice: everything the caller needs to complete the payment. Credits are applied only when the processor''s verified callback confirms settlement - creating an invoice moves no money by itself.'
       example:
@@ -299,6 +290,3 @@ components:
       description: 'The web console''s Cognito session, sent as Authorization: Bearer. Accepted only on the self-service account and dashboard routes (the ones declaring it), where it authenticates the same account the session belongs to; every other authenticated route takes the API key alone. The token is a Cognito-issued JWT, verified (RS256 only) against the user pool''s published keys.'
       scheme: bearer
       type: http
-x-refined-from:
-- cogdepot-com-openapi.json
-- cogdepot-com-openapi.yml
