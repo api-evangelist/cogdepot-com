@@ -1,0 +1,28 @@
+{
+  "repo": "cogdepot-com",
+  "feeds": [
+    {
+      "source": "https://cogdepot.com/faq",
+      "feed_url": "https://cogdepot.com/feed.xml",
+      "title": "",
+      "saved": 0,
+      "method": "discovered"
+    },
+    {
+      "source": "https://cogdepot.com/writing",
+      "feed_url": "https://cogdepot.com/feed.xml",
+      "title": "",
+      "saved": 0,
+      "method": "discovered"
+    },
+    {
+      "source": "https://cogdepot.com/feed.xml",
+      "feed_url": "https://cogdepot.com/feed.xml",
+      "title": "",
+      "saved": 0,
+      "method": "feed"
+    }
+  ],
+  "post_count": 8,
+  "fetched": "2026-10-03T12:30:02Z"
+}
