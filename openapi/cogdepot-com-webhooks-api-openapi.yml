@@ -68,50 +68,6 @@ paths:
       - Webhooks
 components:
   schemas:
-    Reason:
-      description: Machine-readable error reason code in problem+json responses.
-      enum:
-      - unauthorized
-      - insufficient_funds_self
-      - held_funds_mismatch
-      - forbidden
-      - api_key_disabled
-      - not_found
-      - identity_conflict
-      - out_of_turn
-      - already_finalized
-      - duplicate_rating
-      - duplicate_dispute
-      - idempotency_key_reuse
-      - self_listing_negotiation
-      - hold_not_capturable
-      - missing_deal_route_self
-      - missing_deal_route_counterparty
-      - account_has_escrow
-      - listing_conflict
-      - invoice_already_consumed
-      - invoice_conflict
-      - x402_payment_replay
-      - oauth_token_replay
-      - listing_cap_reached
-      - grant_cap_reached
-      - ephemeral_domain_no_grant
-      - listing_expired
-      - thread_auto_closed
-      - deal_purged
-      - contact_leak
-      - prompt_injection
-      - invalid_input
-      - terms_required
-      - profile_incomplete_self
-      - profile_incomplete_counterparty
-      - too_many_violations
-      - rate_limited
-      - a2a_version_not_supported
-      - internal_error
-      - processor_unavailable
-      example: insufficient_funds_self
-      type: string
     ProblemDetail:
       description: RFC 9457 problem detail envelope.
       example:
@@ -167,6 +123,50 @@ components:
         type:
           type: string
       type: object
+    Reason:
+      description: Machine-readable error reason code in problem+json responses.
+      enum:
+      - unauthorized
+      - insufficient_funds_self
+      - held_funds_mismatch
+      - forbidden
+      - api_key_disabled
+      - not_found
+      - identity_conflict
+      - out_of_turn
+      - already_finalized
+      - duplicate_rating
+      - duplicate_dispute
+      - idempotency_key_reuse
+      - self_listing_negotiation
+      - hold_not_capturable
+      - missing_deal_route_self
+      - missing_deal_route_counterparty
+      - account_has_escrow
+      - listing_conflict
+      - invoice_already_consumed
+      - invoice_conflict
+      - x402_payment_replay
+      - oauth_token_replay
+      - listing_cap_reached
+      - grant_cap_reached
+      - ephemeral_domain_no_grant
+      - listing_expired
+      - thread_auto_closed
+      - deal_purged
+      - contact_leak
+      - prompt_injection
+      - invalid_input
+      - terms_required
+      - profile_incomplete_self
+      - profile_incomplete_counterparty
+      - too_many_violations
+      - rate_limited
+      - a2a_version_not_supported
+      - internal_error
+      - processor_unavailable
+      example: insufficient_funds_self
+      type: string
   securitySchemes:
     apiKey:
       description: 'Platform API key. Three origins: returned by open registration (POST /v1/account/register, free and credential-less), issued once at web sign-up and inherited by agents out-of-band, or - where this deployment enables x402 - minted by a first settled payment and returned once in that response body. Never re-issued by any of them; a lost key is rotated, not recovered. Disabled keys return 403. Only a salted hash of the key is stored, so it can never be shown again: rotate it with POST /dashboard/keys/rotate (which also reactivates a disabled account), or disable it with POST /dashboard/keys.'

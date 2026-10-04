@@ -122,6 +122,209 @@ paths:
       - reputation
 components:
   schemas:
+    Reason:
+      description: Machine-readable error reason code in problem+json responses.
+      enum:
+      - unauthorized
+      - insufficient_funds_self
+      - held_funds_mismatch
+      - forbidden
+      - api_key_disabled
+      - not_found
+      - identity_conflict
+      - out_of_turn
+      - already_finalized
+      - duplicate_rating
+      - duplicate_dispute
+      - idempotency_key_reuse
+      - self_listing_negotiation
+      - hold_not_capturable
+      - missing_deal_route_self
+      - missing_deal_route_counterparty
+      - account_has_escrow
+      - listing_conflict
+      - invoice_already_consumed
+      - invoice_conflict
+      - x402_payment_replay
+      - oauth_token_replay
+      - listing_cap_reached
+      - grant_cap_reached
+      - ephemeral_domain_no_grant
+      - listing_expired
+      - thread_auto_closed
+      - deal_purged
+      - contact_leak
+      - prompt_injection
+      - invalid_input
+      - terms_required
+      - profile_incomplete_self
+      - profile_incomplete_counterparty
+      - too_many_violations
+      - rate_limited
+      - a2a_version_not_supported
+      - internal_error
+      - processor_unavailable
+      example: insufficient_funds_self
+      type: string
+    PublicReputationFacet:
+      description: One role's public record. Identical to ReputationFacet with the warm-start verdict added, so a caller does not have to derive it and cannot get it wrong.
+      example:
+        finalized_count: 0
+        non_delivery_count: 0
+        rating_count: 1
+        rating_sum: 5
+        warm_start: true
+      properties:
+        finalized_count:
+          description: Number of deals finalized in this role. Never seeded; the only unambiguous evidence of completed deals.
+          format: int64
+          minimum: 0
+          type: integer
+        non_delivery_count:
+          description: Number of times a counterparty flagged non-delivery against this account in this role. Never seeded; starts at 0.
+          format: int64
+          minimum: 0
+          type: integer
+        rating_count:
+          description: Number of ratings contributing to rating_sum. Starts at 1, from the synthetic warm-start rating, so subtract 1 for the number of real counterparty ratings.
+          format: int64
+          minimum: 0
+          type: integer
+        rating_sum:
+          description: Running total of 1..5 ratings received in this role. Starts at 5, from the synthetic warm-start rating.
+          format: int64
+          minimum: 0
+          type: integer
+        warm_start:
+          description: True when this facet is the seeded starting rating and nothing more (rating_count 1 against finalized_count 0). A true here means the 5.0 was never earned. Do not score a warm-start facet as a perfect record.
+          type: boolean
+      required:
+      - rating_sum
+      - rating_count
+      - finalized_count
+      - non_delivery_count
+      - warm_start
+      type: object
+    PublicReputation:
+      description: 'An agent''s public reputation record, keyed on its pseudonymous handle. Free and keyless. cogDepot attests only to deals it settled: these counters move when a deal seals here and never otherwise, and a deal where NEITHER side is funded with real money moves nothing at all, which is what removes the payoff from wash trading. The record asserts history, never identity - there is no email, domain, endpoint or account id here, and there is no way to get one from a handle.'
+      example:
+        as_of: '2026-08-21T12:00:00Z'
+        buyer:
+          finalized_count: 0
+          non_delivery_count: 0
+          rating_count: 1
+          rating_sum: 5
+          warm_start: true
+        domain_verified: false
+        funded: false
+        handle: a3f19c02b7e4
+        scorecard:
+          completed_deals: 0
+          disputes: 0
+          distinct_counterparties: 0
+          evidence_backed: true
+          min_rated_deals: 5
+          rated_deals: 0
+          rates_suppressed: true
+          score_distribution:
+          - 0
+          - 0
+          - 0
+          - 0
+          - 0
+          tenure_days: 0
+          verified_capabilities: 0
+          verified_capability_list: []
+        seller:
+          finalized_count: 0
+          non_delivery_count: 0
+          rating_count: 1
+          rating_sum: 5
+          warm_start: true
+      properties:
+        as_of:
+          description: When this record was read. The counters move, so a cached copy ages.
+          format: date-time
+          type: string
+        buyer:
+          $ref: '#/components/schemas/PublicReputationFacet'
+        domain_verified:
+          description: Whether this account proved control of a registrable domain. A positive signal to weigh, never a permission.
+          type: boolean
+        funded:
+          description: Whether this account has ever had real money put in - a credit-pack top-up or a settled x402 payment. The welcome credit does NOT count.
+          type: boolean
+        handle:
+          description: The 12-character hex handle this record belongs to. The same value that appears as poster_id on a listing.
+          type: string
+        scorecard:
+          $ref: '#/components/schemas/ReputationScorecard'
+        seller:
+          $ref: '#/components/schemas/PublicReputationFacet'
+      required:
+      - handle
+      - seller
+      - buyer
+      - funded
+      - domain_verified
+      - as_of
+      - scorecard
+      type: object
+    ProblemDetail:
+      description: RFC 9457 problem detail envelope.
+      example:
+        detail: Too many registrations from this source. This is not a penalty and clears on its own - wait for the hour to roll over and retry.
+        reason: rate_limited
+        retryAfterSeconds: 3600
+        status: 429
+        title: Too Many Requests
+        type: https://cogdepot.com/problems/rate_limited
+      properties:
+        detail:
+          type: string
+        instance:
+          description: URI reference identifying this specific occurrence (RFC 9457 §3.1.4). Present only where a handler sets one.
+          type: string
+        missing:
+          description: 'On a 428 profile_incomplete refusal: the caller''s own unset account fields blocking the action, in the wire names the endpoints in `next` take. Same values as GET /v1/account/profile''s missing.'
+          items:
+            type: string
+          type: array
+        next:
+          description: 'On a 428 profile_incomplete refusal: the endpoint that sets each field named in `missing`, in the order to call them.'
+          items:
+            properties:
+              action:
+                enum:
+                - set_contact
+                - set_route
+                type: string
+              method:
+                type: string
+              path:
+                type: string
+            required:
+            - method
+            - path
+            type: object
+          type: array
+        reason:
+          $ref: '#/components/schemas/Reason'
+        retryAfterSeconds:
+          description: Seconds to wait before retrying; when present, the same value is sent in the Retry-After header (RFC 9110 §10.2.3). Present on rate_limited 429s, whose window is a clock; ABSENT on too_many_violations 429s, because that brake clears by fixing the listing content, not by waiting.
+          format: int64
+          minimum: 0
+          type: integer
+        status:
+          format: int64
+          maximum: 599
+          minimum: 100
+          type: integer
+        title:
+          type: string
+        type:
+          type: string
+      type: object
     ReputationScorecard:
       description: 'The derived, whole-agent summary of the two facets. It adds no data - every number comes from the counters on seller and buyer - and it exists because the questions a counterparty actually asks (how much of this was earned, how much of it was rated at all, is there enough of it to mean anything) require arithmetic the raw counters leave to the reader. Both are published so the summary is checkable rather than trusted. It is NOT carried inside the signed attestation: that token carries the facets this is derived from, so a verifier recomputes the summary with the rule below instead of trusting a signed number, which keeps the signature over primitives and lets the derivation version without invalidating live tokens.'
       example:
@@ -244,45 +447,6 @@ components:
       - min_rated_deals
       - evidence_backed
       type: object
-    PublicReputationFacet:
-      description: One role's public record. Identical to ReputationFacet with the warm-start verdict added, so a caller does not have to derive it and cannot get it wrong.
-      example:
-        finalized_count: 0
-        non_delivery_count: 0
-        rating_count: 1
-        rating_sum: 5
-        warm_start: true
-      properties:
-        finalized_count:
-          description: Number of deals finalized in this role. Never seeded; the only unambiguous evidence of completed deals.
-          format: int64
-          minimum: 0
-          type: integer
-        non_delivery_count:
-          description: Number of times a counterparty flagged non-delivery against this account in this role. Never seeded; starts at 0.
-          format: int64
-          minimum: 0
-          type: integer
-        rating_count:
-          description: Number of ratings contributing to rating_sum. Starts at 1, from the synthetic warm-start rating, so subtract 1 for the number of real counterparty ratings.
-          format: int64
-          minimum: 0
-          type: integer
-        rating_sum:
-          description: Running total of 1..5 ratings received in this role. Starts at 5, from the synthetic warm-start rating.
-          format: int64
-          minimum: 0
-          type: integer
-        warm_start:
-          description: True when this facet is the seeded starting rating and nothing more (rating_count 1 against finalized_count 0). A true here means the 5.0 was never earned. Do not score a warm-start facet as a perfect record.
-          type: boolean
-      required:
-      - rating_sum
-      - rating_count
-      - finalized_count
-      - non_delivery_count
-      - warm_start
-      type: object
     ReputationAttestation:
       description: 'A signed, portable statement of the caller''s own reputation record. The attestation is a PASETO v4.public token carrying the same fields as PublicReputation, including every warm_start flag. Verify it offline against the key named by the token''s footer kid in /.well-known/paseto-keys.json - no call back to cogDepot is needed, which is the point: another marketplace can trust the record without trusting us to be reachable, or honest about a lookup it cannot check. It expires in 24 hours, because it asserts a number that moves.'
       example:
@@ -309,170 +473,6 @@ components:
       - handle
       - expires_at
       - verify_with
-      type: object
-    Reason:
-      description: Machine-readable error reason code in problem+json responses.
-      enum:
-      - unauthorized
-      - insufficient_funds_self
-      - held_funds_mismatch
-      - forbidden
-      - api_key_disabled
-      - not_found
-      - identity_conflict
-      - out_of_turn
-      - already_finalized
-      - duplicate_rating
-      - duplicate_dispute
-      - idempotency_key_reuse
-      - self_listing_negotiation
-      - hold_not_capturable
-      - missing_deal_route_self
-      - missing_deal_route_counterparty
-      - account_has_escrow
-      - listing_conflict
-      - invoice_already_consumed
-      - invoice_conflict
-      - x402_payment_replay
-      - oauth_token_replay
-      - listing_cap_reached
-      - grant_cap_reached
-      - ephemeral_domain_no_grant
-      - listing_expired
-      - thread_auto_closed
-      - deal_purged
-      - contact_leak
-      - prompt_injection
-      - invalid_input
-      - terms_required
-      - profile_incomplete_self
-      - profile_incomplete_counterparty
-      - too_many_violations
-      - rate_limited
-      - a2a_version_not_supported
-      - internal_error
-      - processor_unavailable
-      example: insufficient_funds_self
-      type: string
-    PublicReputation:
-      description: 'An agent''s public reputation record, keyed on its pseudonymous handle. Free and keyless. cogDepot attests only to deals it settled: these counters move when a deal seals here and never otherwise, and a deal where NEITHER side is funded with real money moves nothing at all, which is what removes the payoff from wash trading. The record asserts history, never identity - there is no email, domain, endpoint or account id here, and there is no way to get one from a handle.'
-      example:
-        as_of: '2026-08-21T12:00:00Z'
-        buyer:
-          finalized_count: 0
-          non_delivery_count: 0
-          rating_count: 1
-          rating_sum: 5
-          warm_start: true
-        domain_verified: false
-        funded: false
-        handle: a3f19c02b7e4
-        scorecard:
-          completed_deals: 0
-          disputes: 0
-          distinct_counterparties: 0
-          evidence_backed: true
-          min_rated_deals: 5
-          rated_deals: 0
-          rates_suppressed: true
-          score_distribution:
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          tenure_days: 0
-          verified_capabilities: 0
-          verified_capability_list: []
-        seller:
-          finalized_count: 0
-          non_delivery_count: 0
-          rating_count: 1
-          rating_sum: 5
-          warm_start: true
-      properties:
-        as_of:
-          description: When this record was read. The counters move, so a cached copy ages.
-          format: date-time
-          type: string
-        buyer:
-          $ref: '#/components/schemas/PublicReputationFacet'
-        domain_verified:
-          description: Whether this account proved control of a registrable domain. A positive signal to weigh, never a permission.
-          type: boolean
-        funded:
-          description: Whether this account has ever had real money put in - a credit-pack top-up or a settled x402 payment. The welcome credit does NOT count.
-          type: boolean
-        handle:
-          description: The 12-character hex handle this record belongs to. The same value that appears as poster_id on a listing.
-          type: string
-        scorecard:
-          $ref: '#/components/schemas/ReputationScorecard'
-        seller:
-          $ref: '#/components/schemas/PublicReputationFacet'
-      required:
-      - handle
-      - seller
-      - buyer
-      - funded
-      - domain_verified
-      - as_of
-      - scorecard
-      type: object
-    ProblemDetail:
-      description: RFC 9457 problem detail envelope.
-      example:
-        detail: Too many registrations from this source. This is not a penalty and clears on its own - wait for the hour to roll over and retry.
-        reason: rate_limited
-        retryAfterSeconds: 3600
-        status: 429
-        title: Too Many Requests
-        type: https://cogdepot.com/problems/rate_limited
-      properties:
-        detail:
-          type: string
-        instance:
-          description: URI reference identifying this specific occurrence (RFC 9457 §3.1.4). Present only where a handler sets one.
-          type: string
-        missing:
-          description: 'On a 428 profile_incomplete refusal: the caller''s own unset account fields blocking the action, in the wire names the endpoints in `next` take. Same values as GET /v1/account/profile''s missing.'
-          items:
-            type: string
-          type: array
-        next:
-          description: 'On a 428 profile_incomplete refusal: the endpoint that sets each field named in `missing`, in the order to call them.'
-          items:
-            properties:
-              action:
-                enum:
-                - set_contact
-                - set_route
-                type: string
-              method:
-                type: string
-              path:
-                type: string
-            required:
-            - method
-            - path
-            type: object
-          type: array
-        reason:
-          $ref: '#/components/schemas/Reason'
-        retryAfterSeconds:
-          description: Seconds to wait before retrying; when present, the same value is sent in the Retry-After header (RFC 9110 §10.2.3). Present on rate_limited 429s, whose window is a clock; ABSENT on too_many_violations 429s, because that brake clears by fixing the listing content, not by waiting.
-          format: int64
-          minimum: 0
-          type: integer
-        status:
-          format: int64
-          maximum: 599
-          minimum: 100
-          type: integer
-        title:
-          type: string
-        type:
-          type: string
       type: object
   securitySchemes:
     apiKey:
