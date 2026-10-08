@@ -78,3 +78,38 @@ free_tier:
   shape: welcome credit + keyless discovery/reputation/preview surfaces; not a separate plan
 observed:
 - 2026-09-19 GET https://api.cogdepot.com/v1/feed with no credential returned 402 whose accepts[] matched the three x402 tiers above (amounts 5000000, 50000000, 500000 base units of USDC).
+x-canonical:
+  generated: '2026-10-08'
+  vocabulary: all/0-working/economics/plans-canonical.yml
+  models:
+  - subscription
+  units: []
+  plans:
+  - name: Prepaid credits (the only plan)
+    access: other
+    model: subscription
+    model_how: derived
+    units: []
+    periods:
+    - other
+  - name: 10 credit packs (x402, accepts[0])
+    access: other
+    model: subscription
+    model_how: derived
+    units: []
+    periods:
+    - one-time
+  - name: 100 credit packs (x402)
+    access: other
+    model: subscription
+    model_how: derived
+    units: []
+    periods:
+    - one-time
+  - name: 1 credit pack (x402, cheapest, listed last)
+    access: other
+    model: subscription
+    model_how: derived
+    units: []
+    periods:
+    - one-time
