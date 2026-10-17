@@ -117,36 +117,37 @@ paths:
       - Dashboard
 components:
   schemas:
-    InvoiceResponse:
-      description: 'The 201 body of a created top-up invoice: everything the caller needs to complete the payment. Credits are applied only when the processor''s verified callback confirms settlement - creating an invoice moves no money by itself.'
+    CreateInvoiceRequest:
       example:
-        amount_micro: 5000000
-        credits_to_add: 10000
-        payment_url: https://cogdepot.com/dashboard/pay/0xa11ce0000000000000000000000000000000b0b0
-        processor_id: '0xa11ce0000000000000000000000000000000b0b0'
+        chain: usdcpolygon
+        pack_count: 10
+        processor: blockbee
       properties:
-        amount_micro:
-          description: Total charge in µUSD (1 USD = 1,000,000 µUSD).
-          format: int64
-          minimum: 0
-          type: integer
-        credits_to_add:
-          description: Credits the account receives when the payment settles.
-          format: int64
-          minimum: 0
-          type: integer
-        payment_url:
-          description: Where to complete the payment. For BlockBee this is cogDepot's own pay page showing the deposit address, amount and QR code.
-          format: uri
+        chain:
+          description: 'OPTIONAL. BlockBee chain; ignored for OpenNode. One of usdtpolygon (USDT0-Polygon), usdcpolygon (USDC-Polygon, native), usdcsol (USDC-Solana), usdterc20 (USDT-Ethereum), usdc (USDC-Ethereum), usdttrc20 (USDT-Tron), usdcbase (USDC-Base). Defaults to usdtpolygon when omitted. USDT on Base is not offered: that token is a bridge wrapper Tether does not issue.'
+          enum:
+          - usdttrc20
+          - usdterc20
+          - usdc
+          - usdcsol
+          - usdtpolygon
+          - usdcpolygon
+          - usdcbase
           type: string
-        processor_id:
-          description: The processor's opaque invoice/order identifier.
+        pack_count:
+          description: 'Number of credit packs to purchase. Bounds are per-processor: 1-10 for opennode (and for the non-production stub path); 1-200 for blockbee, whose chains also impose a minimum floor of whole packs covering the chain''s minimum transaction (Polygon floors at 1 pack, Ethereum at 4, Tron at 20). An out-of-bounds count is a 400 whose detail names the exact bound.'
+          format: int64
+          maximum: 200
+          minimum: 1
+          type: integer
+        processor:
+          description: 'Payment processor. Required on production: omitting it is a 400 invalid_input naming the valid values, and a processor production has not configured is a 502 processor_unavailable. Non-production stages instead fall back to a stub invoice for an omitted or unconfigured processor, and its payment URL cannot be paid.'
+          enum:
+          - opennode
+          - blockbee
           type: string
       required:
-      - payment_url
-      - amount_micro
-      - credits_to_add
-      - processor_id
+      - pack_count
       type: object
     ProblemDetail:
       description: RFC 9457 problem detail envelope.
@@ -203,37 +204,36 @@ components:
         type:
           type: string
       type: object
-    CreateInvoiceRequest:
+    InvoiceResponse:
+      description: 'The 201 body of a created top-up invoice: everything the caller needs to complete the payment. Credits are applied only when the processor''s verified callback confirms settlement - creating an invoice moves no money by itself.'
       example:
-        chain: usdcpolygon
-        pack_count: 10
-        processor: blockbee
+        amount_micro: 5000000
+        credits_to_add: 10000
+        payment_url: https://cogdepot.com/dashboard/pay/0xa11ce0000000000000000000000000000000b0b0
+        processor_id: '0xa11ce0000000000000000000000000000000b0b0'
       properties:
-        chain:
-          description: 'OPTIONAL. BlockBee chain; ignored for OpenNode. One of usdtpolygon (USDT0-Polygon), usdcpolygon (USDC-Polygon, native), usdcsol (USDC-Solana), usdterc20 (USDT-Ethereum), usdc (USDC-Ethereum), usdttrc20 (USDT-Tron), usdcbase (USDC-Base). Defaults to usdtpolygon when omitted. USDT on Base is not offered: that token is a bridge wrapper Tether does not issue.'
-          enum:
-          - usdttrc20
-          - usdterc20
-          - usdc
-          - usdcsol
-          - usdtpolygon
-          - usdcpolygon
-          - usdcbase
-          type: string
-        pack_count:
-          description: 'Number of credit packs to purchase. Bounds are per-processor: 1-10 for opennode (and for the non-production stub path); 1-200 for blockbee, whose chains also impose a minimum floor of whole packs covering the chain''s minimum transaction (Polygon floors at 1 pack, Ethereum at 4, Tron at 20). An out-of-bounds count is a 400 whose detail names the exact bound.'
+        amount_micro:
+          description: Total charge in µUSD (1 USD = 1,000,000 µUSD).
           format: int64
-          maximum: 200
-          minimum: 1
+          minimum: 0
           type: integer
-        processor:
-          description: 'Payment processor. Required on production: omitting it is a 400 invalid_input naming the valid values, and a processor production has not configured is a 502 processor_unavailable. Non-production stages instead fall back to a stub invoice for an omitted or unconfigured processor, and its payment URL cannot be paid.'
-          enum:
-          - opennode
-          - blockbee
+        credits_to_add:
+          description: Credits the account receives when the payment settles.
+          format: int64
+          minimum: 0
+          type: integer
+        payment_url:
+          description: Where to complete the payment. For BlockBee this is cogDepot's own pay page showing the deposit address, amount and QR code.
+          format: uri
+          type: string
+        processor_id:
+          description: The processor's opaque invoice/order identifier.
           type: string
       required:
-      - pack_count
+      - payment_url
+      - amount_micro
+      - credits_to_add
+      - processor_id
       type: object
     Reason:
       description: Machine-readable error reason code in problem+json responses.

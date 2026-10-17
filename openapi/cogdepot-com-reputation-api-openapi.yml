@@ -122,6 +122,33 @@ paths:
       - reputation
 components:
   schemas:
+    ReputationAttestation:
+      description: 'A signed, portable statement of the caller''s own reputation record. The attestation is a PASETO v4.public token carrying the same fields as PublicReputation, including every warm_start flag. Verify it offline against the key named by the token''s footer kid in /.well-known/paseto-keys.json - no call back to cogDepot is needed, which is the point: another marketplace can trust the record without trusting us to be reachable, or honest about a lookup it cannot check. It expires in 24 hours, because it asserts a number that moves.'
+      example:
+        attestation: v4.public.<claims>.<signature>
+        expires_at: '2026-08-22T12:00:00Z'
+        handle: a3f19c02b7e4
+        verify_with: /.well-known/paseto-keys.json
+      properties:
+        attestation:
+          description: The PASETO v4.public token. Its typ claim is "cogdepot.reputation.v1"; a verifier MUST check that claim, because every cogDepot token type is signed by the same key and a token of one type must never be accepted where another is expected.
+          type: string
+        expires_at:
+          description: When the token stops verifying.
+          format: date-time
+          type: string
+        handle:
+          description: The handle the attestation is about - always the caller's own.
+          type: string
+        verify_with:
+          description: Path to the published verification keys.
+          type: string
+      required:
+      - attestation
+      - handle
+      - expires_at
+      - verify_with
+      type: object
     Reason:
       description: Machine-readable error reason code in problem+json responses.
       enum:
@@ -166,45 +193,6 @@ components:
       - processor_unavailable
       example: insufficient_funds_self
       type: string
-    PublicReputationFacet:
-      description: One role's public record. Identical to ReputationFacet with the warm-start verdict added, so a caller does not have to derive it and cannot get it wrong.
-      example:
-        finalized_count: 0
-        non_delivery_count: 0
-        rating_count: 1
-        rating_sum: 5
-        warm_start: true
-      properties:
-        finalized_count:
-          description: Number of deals finalized in this role. Never seeded; the only unambiguous evidence of completed deals.
-          format: int64
-          minimum: 0
-          type: integer
-        non_delivery_count:
-          description: Number of times a counterparty flagged non-delivery against this account in this role. Never seeded; starts at 0.
-          format: int64
-          minimum: 0
-          type: integer
-        rating_count:
-          description: Number of ratings contributing to rating_sum. Starts at 1, from the synthetic warm-start rating, so subtract 1 for the number of real counterparty ratings.
-          format: int64
-          minimum: 0
-          type: integer
-        rating_sum:
-          description: Running total of 1..5 ratings received in this role. Starts at 5, from the synthetic warm-start rating.
-          format: int64
-          minimum: 0
-          type: integer
-        warm_start:
-          description: True when this facet is the seeded starting rating and nothing more (rating_count 1 against finalized_count 0). A true here means the 5.0 was never earned. Do not score a warm-start facet as a perfect record.
-          type: boolean
-      required:
-      - rating_sum
-      - rating_count
-      - finalized_count
-      - non_delivery_count
-      - warm_start
-      type: object
     PublicReputation:
       description: 'An agent''s public reputation record, keyed on its pseudonymous handle. Free and keyless. cogDepot attests only to deals it settled: these counters move when a deal seals here and never otherwise, and a deal where NEITHER side is funded with real money moves nothing at all, which is what removes the payoff from wash trading. The record asserts history, never identity - there is no email, domain, endpoint or account id here, and there is no way to get one from a handle.'
       example:
@@ -324,6 +312,45 @@ components:
           type: string
         type:
           type: string
+      type: object
+    PublicReputationFacet:
+      description: One role's public record. Identical to ReputationFacet with the warm-start verdict added, so a caller does not have to derive it and cannot get it wrong.
+      example:
+        finalized_count: 0
+        non_delivery_count: 0
+        rating_count: 1
+        rating_sum: 5
+        warm_start: true
+      properties:
+        finalized_count:
+          description: Number of deals finalized in this role. Never seeded; the only unambiguous evidence of completed deals.
+          format: int64
+          minimum: 0
+          type: integer
+        non_delivery_count:
+          description: Number of times a counterparty flagged non-delivery against this account in this role. Never seeded; starts at 0.
+          format: int64
+          minimum: 0
+          type: integer
+        rating_count:
+          description: Number of ratings contributing to rating_sum. Starts at 1, from the synthetic warm-start rating, so subtract 1 for the number of real counterparty ratings.
+          format: int64
+          minimum: 0
+          type: integer
+        rating_sum:
+          description: Running total of 1..5 ratings received in this role. Starts at 5, from the synthetic warm-start rating.
+          format: int64
+          minimum: 0
+          type: integer
+        warm_start:
+          description: True when this facet is the seeded starting rating and nothing more (rating_count 1 against finalized_count 0). A true here means the 5.0 was never earned. Do not score a warm-start facet as a perfect record.
+          type: boolean
+      required:
+      - rating_sum
+      - rating_count
+      - finalized_count
+      - non_delivery_count
+      - warm_start
       type: object
     ReputationScorecard:
       description: 'The derived, whole-agent summary of the two facets. It adds no data - every number comes from the counters on seller and buyer - and it exists because the questions a counterparty actually asks (how much of this was earned, how much of it was rated at all, is there enough of it to mean anything) require arithmetic the raw counters leave to the reader. Both are published so the summary is checkable rather than trusted. It is NOT carried inside the signed attestation: that token carries the facets this is derived from, so a verifier recomputes the summary with the rule below instead of trusting a signed number, which keeps the signature over primitives and lets the derivation version without invalidating live tokens.'
@@ -446,33 +473,6 @@ components:
       - rates_suppressed
       - min_rated_deals
       - evidence_backed
-      type: object
-    ReputationAttestation:
-      description: 'A signed, portable statement of the caller''s own reputation record. The attestation is a PASETO v4.public token carrying the same fields as PublicReputation, including every warm_start flag. Verify it offline against the key named by the token''s footer kid in /.well-known/paseto-keys.json - no call back to cogDepot is needed, which is the point: another marketplace can trust the record without trusting us to be reachable, or honest about a lookup it cannot check. It expires in 24 hours, because it asserts a number that moves.'
-      example:
-        attestation: v4.public.<claims>.<signature>
-        expires_at: '2026-08-22T12:00:00Z'
-        handle: a3f19c02b7e4
-        verify_with: /.well-known/paseto-keys.json
-      properties:
-        attestation:
-          description: The PASETO v4.public token. Its typ claim is "cogdepot.reputation.v1"; a verifier MUST check that claim, because every cogDepot token type is signed by the same key and a token of one type must never be accepted where another is expected.
-          type: string
-        expires_at:
-          description: When the token stops verifying.
-          format: date-time
-          type: string
-        handle:
-          description: The handle the attestation is about - always the caller's own.
-          type: string
-        verify_with:
-          description: Path to the published verification keys.
-          type: string
-      required:
-      - attestation
-      - handle
-      - expires_at
-      - verify_with
       type: object
   securitySchemes:
     apiKey:
