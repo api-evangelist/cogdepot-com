@@ -19,22 +19,9 @@
   "errors": [],
   "warnings": [],
   "notes": [
-    "1 archived document(s) dropped as subsets of other archived documents",
     "sourced from openapi/_original/ (1 archived document(s)); previously refined output at the top level was skipped rather than re-split",
     "cogdepot-com-openapi.json: upgraded openapi 3.1.0 -> OpenAPI 3.2.0",
     "apis.yml register: already-registered"
   ],
-  "skipped": [
-    "_original/cogdepot-com-openapi.yml: archived document superseded by a larger archived document",
-    "cogdepot-com-a2a-api-openapi.yml: previously refined output, superseded by openapi/_original/",
-    "cogdepot-com-account-api-openapi.yml: previously refined output, superseded by openapi/_original/",
-    "cogdepot-com-dashboard-api-openapi.yml: previously refined output, superseded by openapi/_original/",
-    "cogdepot-com-deals-api-openapi.yml: previously refined output, superseded by openapi/_original/",
-    "cogdepot-com-discovery-api-openapi.yml: previously refined output, superseded by openapi/_original/",
-    "cogdepot-com-listings-api-openapi.yml: previously refined output, superseded by openapi/_original/",
-    "cogdepot-com-meta-api-openapi.yml: previously refined output, superseded by openapi/_original/",
-    "cogdepot-com-reputation-api-openapi.yml: previously refined output, superseded by openapi/_original/",
-    "cogdepot-com-threads-api-openapi.yml: previously refined output, superseded by openapi/_original/",
-    "cogdepot-com-webhooks-api-openapi.yml: previously refined output, superseded by openapi/_original/"
-  ]
+  "skipped": []
 }

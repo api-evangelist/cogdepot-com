@@ -1,12 +1,12 @@
 {
  "url": "https://api.cogdepot.com/openapi.json",
- "requested_url": "https://api.cogdepot.com/openapi.json",
+ "final": "https://api.cogdepot.com/openapi.json",
  "status": 200,
  "content_type": "application/json",
- "bytes": 373639,
- "sha256": "408c48cbeaac243edd4a2160789fcc0c3f9f7a04f7776d234983aad031c0d315",
- "fetched_at": "2026-10-04",
+ "bytes": 402102,
+ "sha256": "0db29cd613ecf5af0e09b9a496248c8eb52bd417f16eba2aad4796e3bf495ac5",
+ "fetched_at": "2026-10-19",
  "fetched_by": "APIEvangelist-Harvest/1.0 (+https://apievangelist.com)",
- "match": "equivalent",
- "note": "Re-fetched from the provider by verify-openapi-sources.py; the provider's current document describes the same operations (Jaccard 0.913), but the bytes differ, so the archive is an earlier or reformatted copy."
+ "match": "byte-identical",
+ "note": "re-archived: the provider's current document replaced a stale archive (roadmap#793); the old files are in openapi/_superseded/2026-10-19-stale"
 }
