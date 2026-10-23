@@ -636,3 +636,9 @@ components:
       description: 'The web console''s Cognito session, sent as Authorization: Bearer. Accepted only on the self-service account and dashboard routes (the ones declaring it), where it authenticates the same account the session belongs to; every other authenticated route takes the API key alone. The token is a Cognito-issued JWT, verified (RS256 only) against the user pool''s published keys.'
       scheme: bearer
       type: http
+x-provenance:
+  method: harvested
+  publisher: cogDepot
+  source: https://api.cogdepot.com/openapi.json
+  note: split by refine-openapis from the provider's own published document, verified by fetch (openapi/_original/*.fetch.json);
+    stamped by stamp-openapi-provenance.py (roadmap#793)
